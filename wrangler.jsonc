@@ -1,0 +1,11 @@
+{
+  // Must match the Worker name in the Cloudflare dashboard.
+  "name": "personal-website",
+  "compatibility_date": "2026-10-26",
+  // Only public/ is published; server.mjs and tests are never served.
+  "assets": {
+    "directory": "./public",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "none"
+  }
+}

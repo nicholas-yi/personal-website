@@ -1,0 +1,14 @@
+{
+  "name": "nicholas-yi-personal-website",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A small personal website with an interactive ASCII rain shelter.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test"
+  }
+}

@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f8f7f2">
+    <meta name="description" content="Nicholas Yi is a software engineer at Microsoft AI Development and Acceleration working on agents, evaluation, and post-training. Research, writing, and a quiet shelter from the ASCII rain.">
+    <title>Nicholas Yi</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23f8f7f2'/%3E%3Ctext x='32' y='47' text-anchor='middle' font-family='monospace' font-size='54' fill='%235b6844'%3E*%3C/text%3E%3C/svg%3E">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="graph.css">
+    <script type="module" src="garden.js"></script>
+    <script type="module" src="graph.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <canvas id="garden" aria-hidden="true"></canvas>
+
+    <div class="page">
+      <header class="site-header">
+        <a class="home-link" href="#" aria-label="Nicholas Yi, home">
+          <span class="home-mark" aria-hidden="true">*</span> ny
+        </a>
+        <nav aria-label="Main navigation">
+          <a href="#work">work</a>
+          <a class="type-proof" href="#notes" aria-label="notes">
+            <span class="type-face face-mono">notes</span>
+            <span class="type-face face-serif" aria-hidden="true">notes</span>
+            <span class="type-face face-sans" aria-hidden="true">notes</span>
+          </a>
+          <a href="#play">play</a>
+          <a href="#about">about</a>
+          <a href="links.html">links</a>
+        </nav>
+      </header>
+
+      <main id="main" tabindex="-1">
+        <section class="intro" aria-labelledby="name">
+          <div class="rain-window" aria-hidden="true">
+            <div class="window-scene">
+              <pre class="window-lintel" data-window-ink>  .__________________________________.
++--+----------------------------------+--+
+|  |                                  |  |</pre>
+              <div class="window-opening">
+                <pre class="window-shutter window-left" data-window-ink>| :|
+| :|
+| :|
+| :|
+| :|
+| :|
+| :|
+| :|
+| :|
+| :|
+| :|
+| /|
+|/ |</pre>
+                <div class="rain-pane">
+                  <pre class="still-weather">  |    o      :     |    '     |
+     '    |      |      o
+ :      |    '      |     :
+   |       o      :        |
+      |       |       '       o
+ o       :        |      |
+    '        |       o      |
+ |      o        :      |</pre>
+                  <pre class="window-mullion" data-window-ink>|
+|
+|
+|
+|
+|
+|
+|
+|
+|
+|
+|
+|</pre>
+                  <pre class="window-crossbar" data-window-ink>----------------+-----------------</pre>
+                </div>
+                <pre class="window-shutter window-right" data-window-ink>|: |
+|: |
+|: |
+|: |
+|: |
+|: |
+|: |
+|: |
+|: |
+|: |
+|: |
+|\ |
+| \|</pre>
+              </div>
+              <pre class="window-sill" data-window-ink>|  |________________|_________________|  |
+|__|__________________________________|__|
+ /______________________________________/
+       \ | /                 ( (
+        \|/                 .---.
+      .--Y--.               |   |]
+      |_____|               '---'</pre>
+            </div>
+            <span class="window-caption">a good day to stay in.</span>
+          </div>
+          <div class="intro-content">
+          <div class="eyebrow"><span class="little-star" aria-hidden="true">*</span> a small corner of the internet</div>
+          <h1 id="name">Nicholas Yi<span class="name-period">.</span></h1>
+          <p class="intro-line">Building things that learn,<br class="desktop-break"> remember, and work.</p>
+          <div class="intro-copy">
+            <p>I'm Nicholas, a software engineer at <a href="https://microsoft.ai/">Microsoft AI Development and Acceleration</a> working on agents, evaluation, and post-training. My work spans conversational memory, graph-based retrieval, and speech accessibility.</p>
+            <p>I'm interested in how agents remember, how we know they're getting better, and what it takes to make research useful in the real world.</p>
+          </div>
+          <ul class="social-links" aria-label="Find me online">
+            <li><a href="mailto:nicholasyiofficial@gmail.com">email <span aria-hidden="true">&#8599;</span></a></li>
+            <li><a href="https://www.linkedin.com/in/nicholasyiofficial/">linkedin <span aria-hidden="true">&#8599;</span></a></li>
+            <li><a href="https://www.kaggle.com/nicholasyi/competitions">kaggle <span aria-hidden="true">&#8599;</span></a></li>
+          </ul>
+          <div class="garden-note" id="garden-hint" title="Move into the rain: it curls around a dry, inverted-teardrop wake. Click empty space for a puddle ripple.">
+            <span class="note-dash" aria-hidden="true"></span>
+            <span>Let it rain. Make yourself at home.</span>
+          </div>
+          </div>
+        </section>
+
+        <section class="work-section" id="work" aria-labelledby="work-heading">
+          <div class="section-heading">
+            <h2 id="work-heading">A few things I've worked on</h2>
+            <span class="section-aside">research &amp; engineering</span>
+          </div>
+
+          <article class="work-item" data-work="mai">
+            <div class="work-art agent-art" aria-hidden="true">
+              <span class="art-corner">01</span>
+              <pre> .-----------.
+ | &gt; run     |
+ | [ ] test  |
+ | [x] learn |
+ '-----------'
+      | |
+     _| |_</pre>
+              <span class="art-caption">make room for experiments</span>
+            </div>
+            <div class="work-copy">
+              <div class="eyebrow">current rotation / <time datetime="2026-07">Jul 2026</time> &ndash; present</div>
+              <h3><a href="https://microsoft.ai/">Microsoft AI Development and Acceleration <span class="external-arrow" aria-hidden="true">&#8599;</span></a></h3>
+              <p>Agent harnesses and evaluation tools for faster research iteration.</p>
+              <div class="work-links"><span>software engineer / post-training</span><span aria-hidden="true">/</span><a href="https://microsoft.ai/">MAI <span aria-hidden="true">&#8599;</span></a></div>
+            </div>
+          </article>
+
+          <article class="work-item" data-work="stashbird">
+            <div class="work-art bird-art" aria-hidden="true">
+              <span class="art-corner">02</span>
+              <pre>       .
+      /|
+  ___/ |
+ / o   /__
+ &gt;    ____/
+  \__/
+   / \   .</pre>
+              <span class="art-caption">a little memory</span>
+            </div>
+            <div class="work-copy">
+              <div class="eyebrow">previous rotation / preprint <time datetime="2026-09">Sep 2026</time></div>
+              <h3><a href="https://arxiv.org/abs/2609.34242">Stashbird <span class="external-arrow" aria-hidden="true">&#8599;</span></a></h3>
+              <p>Helping conversational agents update their memories as conversations change.</p>
+              <div class="work-links">
+                <span>co-author</span><span aria-hidden="true">/</span>
+                <a href="https://arxiv.org/abs/2609.34242">read the paper <span aria-hidden="true">&#8599;</span></a>
+                <span aria-hidden="true">/</span>
+                <a href="https://arxiv.org/pdf/2609.34242" aria-label="Stashbird preprint PDF">PDF <span aria-hidden="true">&#8599;</span></a>
+              </div>
+            </div>
+          </article>
+
+          <article class="work-item" data-work="graphrag">
+            <div class="work-art graph-art" aria-hidden="true">
+              <span class="art-corner">03</span>
+              <pre>   o --- o
+  / \     \
+ o   o --- o
+  \ / \   /
+   o   o-o
+    \ /
+     o</pre>
+              <span class="art-caption">connecting the dots</span>
+            </div>
+            <div class="work-copy">
+              <div class="eyebrow">Microsoft Research / first rotation / article <time datetime="2026-04">Apr 2026</time></div>
+              <h3><a href="https://medium.com/data-science-at-microsoft/graphrag-beyond-the-demo-lessons-from-the-trenches-add83180f849">GraphRAG for code <span class="external-arrow" aria-hidden="true">&#8599;</span></a></h3>
+              <p>Bringing graph-based code retrieval into VS Code.</p>
+              <p class="project-context">Started in my first rotation and continued alongside the Stashbird rotation.</p>
+              <div class="work-links"><span>co-author</span><span aria-hidden="true">/</span><a href="https://medium.com/data-science-at-microsoft/graphrag-beyond-the-demo-lessons-from-the-trenches-add83180f849">read the field notes <span aria-hidden="true">&#8599;</span></a></div>
+            </div>
+          </article>
+
+          <article class="work-item" data-work="staccato">
+            <div class="work-art speech-art" aria-hidden="true">
+              <span class="art-corner">04</span>
+              <pre>    .---.
+    |:::|
+   (|:::|)
+    '---'
+      |
+   ___|___
+ ~ . . . ~</pre>
+              <span class="art-caption">more ways to be heard</span>
+            </div>
+            <div class="work-copy">
+              <div class="eyebrow">first rotation / hackathon <time datetime="2025-11">Nov 2025</time></div>
+              <h3><a href="https://github.com/microsoft/Staccato-Stuttered-ASR">Staccato <span class="external-arrow" aria-hidden="true">&#8599;</span></a></h3>
+              <p>Speech recognition designed to better understand people who stutter.</p>
+              <p class="project-context">My brother stutters, so making speech technology more accessible is personal to me.</p>
+              <p class="project-recognition">Team 1st place &#183; Ability Hack Executive Challenge</p>
+              <div class="work-links">
+                <span>Microsoft Global Hackathon, 2025</span><span aria-hidden="true">/</span>
+                <a href="https://github.com/microsoft/Staccato-Stuttered-ASR">project code <span aria-hidden="true">&#8599;</span></a>
+              </div>
+            </div>
+          </article>
+          <p class="more-links"><a href="links.html">More links, competition results, and earlier experiments <span aria-hidden="true">&#8594;</span></a></p>
+        </section>
+
+        <section class="notes-section" id="notes" aria-labelledby="notes-heading">
+          <div class="section-heading">
+            <h2 id="notes-heading">Threads I keep coming back to</h2>
+            <span class="section-aside">a few interests</span>
+          </div>
+          <dl class="interest-list">
+            <div><dt><span aria-hidden="true">01</span> Memory</dt><dd>What should an agent keep, revise, or forget?</dd></div>
+            <div><dt><span aria-hidden="true">02</span> Evaluation</dt><dd>How do we tell real progress from a better-looking number?</dd></div>
+            <div><dt><span aria-hidden="true">03</span> Research tools</dt><dd>How can better infrastructure make room for better experiments?</dd></div>
+          </dl>
+        </section>
+
+        <section class="play-section" id="play" aria-labelledby="play-heading">
+          <div class="section-heading">
+            <h2 id="play-heading">Everything is connected. Probably.</h2>
+            <span class="section-aside">a little graph playground</span>
+          </div>
+          <p class="play-intro">See what connects.</p>
+          <div data-graph-playground>
+            <pre class="graph-fallback" aria-hidden="true">      microsoft --- Stashbird
+      /                    \
+  GraphRAG              evaluation
+     |                      |
+  open source            Staccato
+     |                      |
+   bassoon          film photography
+      \                    /
+       archery -- art museums</pre>
+            <p class="play-intro">Enable JavaScript to connect the dots.</p>
+          </div>
+        </section>
+
+        <section class="about-section" id="about" aria-labelledby="about-heading">
+          <div class="house-roof" aria-hidden="true">
+            <pre>                 /\
+               /____\
+             /..:..:..\
+           /____________\
+         /..:..:..:..:..:..\
+       /____________________\
+     /..:..:..:..:..:..:..:..:..\
+   /____________________________\
+ /..:..:..:..:..:..:..:..:..:..:..:..\
++=====================================+</pre>
+          </div>
+          <div class="house-body">
+          <div class="about-copy">
+            <div class="eyebrow">a little background</div>
+            <h2 id="about-heading">Outside the brackets</h2>
+            <p class="sidequest-lead">I write sidequests into my main life journey:</p>
+            <ul class="sidequest-path" role="list">
+              <li>a trail less taken,</li>
+              <li>an art museum undiscovered,</li>
+              <li>a recipe untried.</li>
+            </ul>
+            <p class="sidequest-lead">so whether it be</p>
+            <ul class="sidequest-path" role="list">
+              <li>my archival art volunteering at the stanford rodin centre,</li>
+              <li>or therapeutic shoooting at the archery range as an ex-olympic training Team USA member,</li>
+              <li>or film development as an aspiring hobbyist photographer,</li>
+              <li>or open-sourcing my work and entering online competitions,</li>
+            </ul>
+            <p class="sidequest-conclusion">I seek to understand the outside world
+              <span>one different lens, or neural layer, at a time</span></p>
+            <p>If any of those are your thing, <a href="mailto:nicholasyiofficial@gmail.com">say hello <span aria-hidden="true">&#8599;</span></a>.</p>
+          </div>
+          <div class="house-furniture">
+          <figure class="picture-frame" aria-label="An empty rectangular picture frame, ready for a future photo.">
+            <pre aria-hidden="true">.----------------.
+| .------------. |
+| |            | |
+| |            | |
+| |            | |
+| |            | |
+| '------------' |
+'----------------'</pre>
+            <figcaption>a picture for later.</figcaption>
+          </figure>
+      <div class="hearth" role="img" aria-label="A small ASCII fireplace with gently flickering flames.">
+        <pre class="hearth-surround" aria-hidden="true">  _______________________________
+ /_______________________________\
+ |  [__] [__] [__] [__] [__] [__] |
+ | [__] |                 | [__] |
+ | [__] |                 | [__] |
+ | [__] |                 | [__] |
+ | [__] |                 | [__] |
+ |______|_________________|______|
+ /_______________________________\</pre>
+        <div class="hearth-fire" aria-hidden="true">
+          <pre class="hearth-frame hearth-frame-one">     (  )
+  (  ) /(
+   ) \/  )
+  (  /\ (
+   ==/==\==</pre>
+          <pre class="hearth-frame hearth-frame-two">   (   )
+    \ (  (
+  (  V )  )
+   \ /\ /
+   ==/==\==</pre>
+          <pre class="hearth-frame hearth-frame-three">      )
+  )  (  )
+   ( /\ (
+   / \/ )
+   ==/==\==</pre>
+        </div>
+        <span class="hearth-caption">a warm place to end up.</span>
+      </div>
+          <div class="about-garden" aria-hidden="true">
+            <pre>         .       *
+   *         .
+       \ | /
+        \|/       .
+    .  --*--
+        /|\
+       / | \
+         |
+    \    |    /
+     \   |   /
+   ___\__|__/___
+  /             \
+  \_____________/</pre>
+            <span>room to grow.</span>
+          </div>
+          </div>
+          </div>
+        </section>
+      </main>
+      <footer class="site-footer">
+        <a class="footer-name" href="#">nicholas yi</a>
+        <span>made for a quieter corner of the web.</span>
+        <a href="#main">back to top <span aria-hidden="true">&#8593;</span></a>
+      </footer>
+    </div>
+
+    <aside class="garden-controls" aria-label="Rain settings" hidden>
+      <button id="motion-toggle" type="button" aria-pressed="false">
+        <span class="control-rain" aria-hidden="true">:|</span><span id="motion-label">rain paused</span>
+      </button>
+      <span class="control-divider" aria-hidden="true"></span>
+      <button id="sound-toggle" type="button" aria-pressed="false">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" aria-hidden="true"><path d="M8 6 5 8H2v4h3l3 2V6Z"/><path class="sound-waves" d="M11 7a5 5 0 0 1 0 6m3-9a9 9 0 0 1 0 12"/><path class="sound-muted" d="m12 8 4 4m0-4-4 4"/></svg>
+        <span id="sound-label">sound off</span>
+      </button>
+    </aside>
+    <p id="garden-status" class="garden-status" role="status"></p>
+  </body>
+</html>
