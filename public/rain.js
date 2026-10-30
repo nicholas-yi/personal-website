@@ -230,6 +230,30 @@ export function overlapsText(x, y, rectangles) {
   return rectangles.some((rect) => x > rect.left - 7 && x < rect.right + 7 && y > rect.top - 9 && y < rect.bottom + 5);
 }
 
+export function indexText(width, height, rectangles) {
+  const cell = 64;
+  const columns = Math.ceil(width / cell);
+  const rows = Math.ceil(height / cell);
+  const buckets = Array.from({ length: columns * rows }, () => []);
+  for (const rect of rectangles) {
+    const area = { left: rect.left - 7, right: rect.right + 7, top: rect.top - 9, bottom: rect.bottom + 5 };
+    if (area.right < 0 || area.left > width || area.bottom < 0 || area.top > height) continue;
+    for (let row = Math.max(0, Math.floor(area.top / cell)); row <= Math.min(rows - 1, Math.floor(area.bottom / cell)); row++) {
+      for (let column = Math.max(0, Math.floor(area.left / cell)); column <= Math.min(columns - 1, Math.floor(area.right / cell)); column++) {
+        buckets[row * columns + column].push(area);
+      }
+    }
+  }
+  return { cell, columns, rows, buckets };
+}
+
+export function overlapsIndexedText(index, x, y) {
+  const column = Math.floor(x / index.cell);
+  const row = Math.floor(y / index.cell);
+  if (column < 0 || column >= index.columns || row < 0 || row >= index.rows) return false;
+  return index.buckets[row * index.columns + column].some((rect) => x > rect.left && x < rect.right && y > rect.top && y < rect.bottom);
+}
+
 export function rainOpacity(scene, x, y, readingArea, windowPane, bending = false) {
   const inside = (rect) => rect && x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
   if (inside(scene.house?.body)) return 0;

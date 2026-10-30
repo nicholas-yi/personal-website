@@ -9,6 +9,7 @@
   },
   "scripts": {
     "start": "node server.mjs",
-    "test": "node --test"
+    "test": "node --test",
+    "spotify:connect": "node scripts/spotify-connect.mjs"
   }
 }

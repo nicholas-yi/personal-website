@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { MAX_DROPS, MAX_RIPPLES, OUTSIDE_RAIN_VISIBILITY, RAIN_GLYPHS, RAIN_INK, WAKE_RADIUS, addRipple, createRain, moveShelter, overlapsText, rainFlow, rainOpacity, resizeRain, stepRain, underShelter, wakeHalfWidth } from "../public/rain.js";
+import { MAX_DROPS, MAX_RIPPLES, OUTSIDE_RAIN_VISIBILITY, RAIN_GLYPHS, RAIN_INK, WAKE_RADIUS, addRipple, createRain, moveShelter, overlapsText, indexText, overlapsIndexedText, rainFlow, rainOpacity, resizeRain, stepRain, underShelter, wakeHalfWidth } from "../public/rain.js";
 
 function seededRandom() {
   let seed = 42;
@@ -9,6 +9,26 @@ function seededRandom() {
     return seed / 4294967296;
   };
 }
+
+test("spatial text lookup preserves exact protected-text edges while ignoring offscreen rectangles", () => {
+  const random = seededRandom();
+  const rects = Array.from({ length: 150 }, () => {
+    const left = random() * 1000 - 100, top = random() * 1500 - 200;
+    return { left, top, right: left + 10 + random() * 180, bottom: top + 5 + random() * 40 };
+  });
+  const index = indexText(800, 900, rects);
+  for (let y = 0; y < 900; y += 7) for (let x = 0; x < 800; x += 9) {
+    assert.equal(overlapsIndexedText(index, x, y), overlapsText(x, y, rects), `${x},${y}`);
+  }
+  const single = [{ left: 100, top: 100, right: 120, bottom: 120 }];
+  const edgeIndex = indexText(800, 900, single);
+  for (const [x, y] of [[93, 100], [127, 100], [100, 91], [100, 125], [94, 92]]) {
+    assert.equal(overlapsIndexedText(edgeIndex, x, y), overlapsText(x, y, single));
+  }
+  assert.equal(overlapsIndexedText(index, -1, 0), false);
+  assert.equal(overlapsIndexedText(index, 0, 10000), false);
+  assert.ok(index.buckets.reduce((sum, bucket) => sum + bucket.length, 0) < rects.length * index.buckets.length / 10);
+});
 
 test("the shower is at least three times denser on desktop, with beads and streaks", () => {
   const rain = createRain(1440, 950, seededRandom());

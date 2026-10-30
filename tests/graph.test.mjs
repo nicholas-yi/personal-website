@@ -28,7 +28,7 @@ test("the blank sketch has ten approved nodes, supplied facts, and no fabricated
   assert.ok(!sketch.nodes.some((node) => node.id === "cmu"));
   assert.ok(!sketch.nodes.some((node) => ["memory", "outdoors", "cooking"].includes(node.id)));
   assert.match(sketch.nodes.find((node) => node.id === "staccato").detail, /Ability Hack.*November 2025/);
-  assert.match(sketch.nodes.find((node) => node.id === "museums").detail, /Rodin at Stanford/);
+  assert.match(sketch.nodes.find((node) => node.id === "museums").detail, /Stanford's Cantor Arts Center/);
   assert.match(sketch.nodes.find((node) => node.id === "stashbird").detail, /Stashbird: Episode-Grounded Lifecycle Reconciliation for Conversational Agent Memory/);
   assert.equal(sketch.nodes.find((node) => node.id === "stashbird").compactLabel, "Stashbird");
   assert.equal(sketch.nodes[0].compactLabel, "microsoft");

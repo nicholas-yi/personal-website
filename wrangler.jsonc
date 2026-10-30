@@ -1,11 +1,22 @@
 {
-  // Must match the Worker name in the Cloudflare dashboard.
-  "name": "personal-website",
-  "compatibility_date": "2026-10-26",
-  // Only public/ is published; server.mjs and tests are never served.
-  "assets": {
-    "directory": "./public",
-    "html_handling": "auto-trailing-slash",
-    "not_found_handling": "none"
-  }
+	// Must match the Worker name in the Cloudflare dashboard.
+	"name": "personal-website",
+	"main": "worker.mjs",
+	"compatibility_date": "2026-10-26",
+	// Only public/ is published; server.mjs and tests are never served.
+	"assets": {
+		"binding": "ASSETS",
+		"run_worker_first": [
+			"/api/listening"
+		],
+		"directory": "./public",
+		"html_handling": "auto-trailing-slash",
+		"not_found_handling": "404-page"
+	},
+	"kv_namespaces": [
+		{
+			"binding": "SPOTIFY_STORE",
+			"id": "4de311ad62d64b01b0a5546196f9859a"
+		}
+	]
 }

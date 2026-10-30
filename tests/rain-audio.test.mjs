@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { MAX_RAIN_VOICES, createRainAudio, createRainPhrase } from "../public/rain-audio.js";
+import { MAX_RAIN_VOICES, RAIN_RECORDINGS, RAIN_PLAYBACK_MULTIPLIER, createRainAudio, createRainPhrase, seamlessRainBuffer } from "../public/rain-audio.js";
 
 function randomSeed() {
   let seed = 42;
@@ -28,7 +28,7 @@ class FakeContext {
   destination = {};
   node(kind) {
     const node = {
-      kind, gain: new Parameter(), frequency: new Parameter(), Q: new Parameter(), pan: new Parameter(),
+      kind, gain: new Parameter(), frequency: new Parameter(), Q: new Parameter(), pan: new Parameter(), playbackRate: new Parameter(),
       starts: [], stops: [], disconnected: false,
       connect(target) { return target; },
       disconnect() { this.disconnected = true; },
@@ -44,9 +44,10 @@ class FakeContext {
   createBufferSource() { return this.node("source"); }
   createStereoPanner() { return this.node("pan"); }
   createBuffer(channels, length, sampleRate) {
-    const data = new Float32Array(length);
-    return { duration: length / sampleRate, getChannelData: () => data };
+    const data = Array.from({ length: channels }, () => new Float32Array(length));
+    return { duration: length / sampleRate, length, sampleRate, numberOfChannels: channels, getChannelData: (channel) => data[channel] };
   }
+  async decodeAudioData() { return this.createBuffer(2, 10000, this.sampleRate); }
   async resume() {
     if (this.resumeError) throw this.resumeError;
     this.state = "running";
@@ -57,13 +58,14 @@ class FakeContext {
   }
 }
 
-function setup() {
+function setup({ fetch = async () => ({ ok: true, arrayBuffer: async () => new ArrayBuffer(8) }) } = {}) {
   const context = new FakeContext();
   let now = 0;
   let sequence = 0;
   const timers = new Map();
   const audio = createRainAudio({
     AudioContext: function () { return context; },
+    fetch,
     random: randomSeed(),
     setTimer(callback, delay) {
       const id = ++sequence;
@@ -91,25 +93,23 @@ function setup() {
   return { audio, context, timers, advance };
 }
 
-test("weather phrases vary their rain layers and contain irregular single/double drips", () => {
+test("natural rain playback is exactly 25 percent slower, with a quieter leaf layer and no synthetic ambient drips", () => {
+  assert.equal(RAIN_PLAYBACK_MULTIPLIER, 0.75);
   const random = randomSeed();
   const phrases = Array.from({ length: 32 }, () => createRainPhrase(random));
   assert.ok(new Set(phrases.map((phrase) => phrase.seconds)).size > 20);
   assert.ok(new Set(phrases.map((phrase) => phrase.bodyGain)).size > 20);
   for (const phrase of phrases) {
-    assert.ok(phrase.seconds >= 6 && phrase.seconds < 10);
-    assert.ok(phrase.drips.length >= 3 && phrase.drips.length <= 12);
-    assert.ok(phrase.drips.some((note, i) => i && note.at - phrase.drips[i - 1].at < 0.4));
-    for (const note of phrase.drips) {
-      assert.ok(note.at >= 0.4 && note.at + note.duration < phrase.seconds);
-      assert.ok(note.volume > 0 && note.volume <= 0.03);
-      assert.ok(note.pitch >= 950 && note.pitch < 2450);
-      assert.ok(Math.abs(note.pan) <= 0.35);
-    }
+    assert.ok(phrase.seconds >= 8 && phrase.seconds < 12);
+    assert.ok(phrase.bodyRate >= 1.15 * 0.75 && phrase.bodyRate < 1.21 * 0.75);
+    assert.ok(phrase.patterRate >= 1.24 * 0.75 && phrase.patterRate < 1.32 * 0.75);
+    assert.ok(phrase.patterGain < phrase.bodyGain / 2);
+    assert.ok(phrase.bodyHz <= 4400 && phrase.patterHz <= 4000);
+    assert.ok(!Object.hasOwn(phrase, "drips"));
   }
 });
 
-test("audio is silent before consent, then schedules two rain layers and varied water drops", async () => {
+test("audio is silent before activation, then loops two stereo field recordings without synthesized rain drops", async () => {
   const { audio, context, timers } = setup();
   assert.equal(context.state, "suspended");
   assert.equal(context.nodes.filter((node) => node.kind === "oscillator").length, 0);
@@ -118,10 +118,85 @@ test("audio is silent before consent, then schedules two rain layers and varied 
   assert.equal(context.state, "running");
   assert.equal(context.nodes.filter((node) => node.kind === "source" && node.loop).length, 2);
   const drips = context.nodes.filter((node) => node.kind === "oscillator");
-  assert.ok(drips.length >= 3);
-  assert.ok(new Set(drips.map((node) => node.frequency.events[0][1])).size > 2);
-  assert.ok(drips.every((node) => node.frequency.events.filter((event) => event[0] === "exponential").length === 2));
+  assert.equal(drips.length, 0);
+  const loops = context.nodes.filter((node) => node.kind === "source" && node.loop);
+  assert.ok(loops.every((node) => node.buffer.numberOfChannels === 2));
+  assert.ok(loops[0].playbackRate.value >= 1.15 * 0.75 && loops[0].playbackRate.value < 1.21 * 0.75);
+  assert.ok(loops[1].playbackRate.value >= 1.24 * 0.75 && loops[1].playbackRate.value < 1.32 * 0.75);
   assert.equal(timers.size, 1);
+});
+
+test("loop overlap joins original tail to head on both channels without changing source buffers", () => {
+  const context = new FakeContext();
+  const source = context.createBuffer(2, 10000, 1000);
+  for (let channel = 0; channel < 2; channel++) {
+    const data = source.getChannelData(channel);
+    for (let i = 0; i < data.length; i++) data[i] = Math.sin(i / 70 + channel) * 0.1;
+  }
+  const original = source.getChannelData(0).slice();
+  const result = seamlessRainBuffer(context, source);
+  assert.equal(result.length, 8000);
+  assert.equal(result.numberOfChannels, 2);
+  for (let channel = 0; channel < 2; channel++) {
+    assert.equal(result.getChannelData(channel)[0], source.getChannelData(channel)[8000]);
+    assert.ok(Math.abs(result.getChannelData(channel)[1999] - source.getChannelData(channel)[1999]) < 0.000001);
+    assert.equal(result.getChannelData(channel)[7999], source.getChannelData(channel)[7999]);
+  }
+  assert.deepEqual(source.getChannelData(0), original);
+  assert.throws(() => seamlessRainBuffer(context, context.createBuffer(1, 2000, 1000)), /too short/);
+});
+
+test("recordings are fetched once per audio instance and repeated activation cannot duplicate loops", async () => {
+  const requested = [];
+  const { audio, context } = setup({ fetch: async (url) => {
+    requested.push(url);
+    return { ok: true, arrayBuffer: async () => new ArrayBuffer(8) };
+  } });
+  assert.equal(requested.length, 0);
+  await Promise.all([audio.play(), audio.play()]);
+  await audio.play();
+  assert.deepEqual(requested, [...RAIN_RECORDINGS]);
+  assert.equal(context.nodes.filter((node) => node.loop).length, 2);
+});
+
+test("failed recordings are explicit, suspended, retryable, and never replaced with white noise", async () => {
+  let fails = true;
+  const { audio, context } = setup({ fetch: async () => ({
+    ok: !fails, status: 404, arrayBuffer: async () => new ArrayBuffer(8),
+  }) });
+  await assert.rejects(audio.play(), /Couldn't load the rain recording \(404\)/);
+  assert.equal(context.state, "suspended");
+  assert.equal(context.nodes.filter((node) => node.loop).length, 0);
+  fails = false;
+  await audio.play();
+  assert.equal(context.state, "running");
+  assert.equal(context.nodes.filter((node) => node.loop).length, 2);
+});
+
+test("decode failure is explicit and suspends the context instead of playing an incomplete layer", async () => {
+  const { audio, context } = setup();
+  context.decodeAudioData = async () => { throw new Error("Unreadable audio"); };
+  await assert.rejects(audio.play(), /Unreadable audio/);
+  assert.equal(context.state, "suspended");
+  assert.equal(context.nodes.filter((node) => node.loop).length, 0);
+});
+
+test("muting during a pending download prevents the eventual decode from starting audible rain", async () => {
+  let release;
+  const gate = new Promise((resolve) => { release = resolve; });
+  const { audio, context, advance, timers } = setup({ fetch: async () => {
+    await gate;
+    return { ok: true, arrayBuffer: async () => new ArrayBuffer(8) };
+  } });
+  const playing = audio.play();
+  const paused = audio.pause();
+  await advance(160);
+  await paused;
+  release();
+  await playing;
+  assert.equal(context.state, "suspended");
+  assert.equal(context.nodes.find((node) => node.kind === "gain").gain.value, 0);
+  assert.equal(timers.size, 0);
 });
 
 test("weather changes over time while scheduled voices remain bounded", async () => {

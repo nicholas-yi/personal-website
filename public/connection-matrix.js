@@ -50,7 +50,7 @@ const pairs = [
 
   ["photography", "staccato", "playful", "A picture keeps a moment; a transcript keeps a voice. In both cases, the person matters more than a perfectly tidy artifact."],
   ["photography", "evaluation", "playful", "A sharp picture is not automatically a good picture. Convenient numbers are not automatically the right measure, either."],
-  ["photography", "museums", "known", "Film photography and art museums are two ways I look more closely. My art-history work has included Rodin at Stanford and an essay on his lasting influence."],
+  ["photography", "museums", "known", "Film photography and art museums are two ways I look more closely. I've volunteered on archival art documentation at Stanford's Cantor Arts Center and written about Rodin's lasting influence."],
   ["photography", "opensource", "playful", "Showing the contact sheet is different from showing the best frame. I appreciate the same openness about how a piece of software came together."],
 
   ["staccato", "evaluation", "playful", "Accuracy matters. So does whose speech the system can understand. A benchmark is only useful if it asks the right question."],

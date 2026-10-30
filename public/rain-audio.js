@@ -1,38 +1,40 @@
 export const MAX_RAIN_VOICES = 24;
+export const RAIN_RECORDINGS = Object.freeze(["/audio/garden-rain.mp3", "/audio/forest-rain.mp3"]);
+export const RAIN_PLAYBACK_MULTIPLIER = 0.75;
 
 export function createRainPhrase(random = Math.random) {
-  const seconds = 6 + random() * 4;
-  const drips = [];
-  const bursts = 2 + Math.floor(random() * 3);
-  for (let burst = 0; burst < bursts; burst++) {
-    let at = 0.4 + random() * (seconds - 1.6);
-    const taps = burst === 0 ? 2 : random() < 0.25 ? 3 : random() < 0.65 ? 2 : 1;
-    const volume = 0.018 + random() * 0.012;
-    const pan = random() * 0.7 - 0.35;
-    for (let tap = 0; tap < taps; tap++) {
-      drips.push({
-        at,
-        pitch: 950 + random() * 1500,
-        volume: volume * (tap ? 0.6 + random() * 0.3 : 1),
-        duration: 0.09 + random() * 0.12,
-        pan,
-        grain: random() * 4,
-      });
-      at += 0.13 + random() * 0.18;
+  return {
+    seconds: 8 + random() * 4,
+    bodyGain: 0.60 + random() * 0.06,
+    bodyHz: 3800 + random() * 600,
+    bodyRate: (1.15 + random() * 0.06) * RAIN_PLAYBACK_MULTIPLIER,
+    patterGain: 0.24 + random() * 0.04,
+    patterHz: 3400 + random() * 600,
+    patterRate: (1.24 + random() * 0.08) * RAIN_PLAYBACK_MULTIPLIER,
+  };
+}
+
+export function seamlessRainBuffer(context, buffer) {
+  const overlap = Math.min(Math.round(buffer.sampleRate * 2), Math.floor(buffer.length / 4));
+  if (overlap < 2 || buffer.duration < 5) throw new Error("The rain recording is too short to loop.");
+  const length = buffer.length - overlap;
+  const loop = context.createBuffer(buffer.numberOfChannels, length, buffer.sampleRate);
+  for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+    const input = buffer.getChannelData(channel);
+    const output = loop.getChannelData(channel);
+    output.set(input.subarray(0, length));
+    for (let sample = 0; sample < overlap; sample++) {
+      const progress = sample / (overlap - 1);
+      output[sample] = input[length + sample] * Math.cos(progress * Math.PI / 2) +
+        input[sample] * Math.sin(progress * Math.PI / 2);
     }
   }
-  return {
-    seconds,
-    bodyGain: 0.09 + random() * 0.055,
-    bodyHz: 850 + random() * 900,
-    patterGain: 0.025 + random() * 0.035,
-    patterHz: 2300 + random() * 2100,
-    drips: drips.sort((a, b) => a.at - b.at),
-  };
+  return loop;
 }
 
 export function createRainAudio({
   AudioContext = globalThis.AudioContext || globalThis.webkitAudioContext,
+  fetch: request = globalThis.fetch,
   random = Math.random,
   setTimer = (callback, delay) => globalThis.setTimeout(callback, delay),
   clearTimer = (id) => globalThis.clearTimeout(id),
@@ -54,22 +56,34 @@ export function createRainAudio({
   }
 
   const bodyNoise = makeNoise(8.3);
-  function layer(buffer, type, frequency) {
+  function layer(buffer, frequency, rate) {
     const source = context.createBufferSource();
     const filter = context.createBiquadFilter();
     const gain = context.createGain();
     source.buffer = buffer;
     source.loop = true;
-    filter.type = type;
+    filter.type = "lowpass";
     filter.frequency.value = frequency;
     filter.Q.value = 0.4;
     gain.gain.value = 0;
+    source.playbackRate.value = rate;
     source.connect(filter).connect(gain).connect(shelterFilter);
-    source.start();
+    source.start(0, random() * buffer.duration);
     return { source, filter, gain };
   }
-  const body = layer(bodyNoise, "lowpass", 1200);
-  const patter = layer(makeNoise(11.7), "bandpass", 3000);
+  let layers = null;
+  let loading = null;
+  function loadRecordings() {
+    if (layers) return Promise.resolve();
+    loading ??= Promise.all(RAIN_RECORDINGS.map(async (url) => {
+      const response = await request(url, { signal: AbortSignal.timeout(20000), credentials: "omit" });
+      if (!response.ok) throw new Error(`Couldn't load the rain recording (${response.status}). Try the sound button again.`);
+      return seamlessRainBuffer(context, await context.decodeAudioData(await response.arrayBuffer()));
+    })).then(([garden, forest]) => {
+      layers = [layer(garden, 4200, 1.18 * RAIN_PLAYBACK_MULTIPLIER), layer(forest, 3700, 1.28 * RAIN_PLAYBACK_MULTIPLIER)];
+    }).finally(() => { loading = null; });
+    return loading;
+  }
   const voices = new Set();
   let phraseTimer = null;
   let playing = false;
@@ -146,11 +160,13 @@ export function createRainAudio({
     if (!playing) return;
     const phrase = createRainPhrase(random);
     const transition = first ? 0.8 : phrase.seconds * 0.75;
+    const [body, patter] = layers;
     ramp(body.gain.gain, phrase.bodyGain, transition);
     ramp(body.filter.frequency, phrase.bodyHz, transition);
     ramp(patter.gain.gain, phrase.patterGain, transition);
     ramp(patter.filter.frequency, phrase.patterHz, transition);
-    for (const note of phrase.drips) drip(note, context.currentTime + 0.05 + note.at);
+    ramp(body.source.playbackRate, phrase.bodyRate, transition);
+    ramp(patter.source.playbackRate, phrase.patterRate, transition);
     phraseTimer = setTimer(() => {
       phraseTimer = null;
       schedulePhrase();
@@ -168,7 +184,15 @@ export function createRainAudio({
   return {
     async play() {
       const currentAction = ++action;
-      await context.resume();
+      try {
+        await Promise.all([context.resume(), loadRecordings()]);
+      } catch (error) {
+        if (currentAction !== action) return;
+        playing = false;
+        clearPhrase();
+        await context.suspend();
+        throw new Error(`Couldn't start natural rain: ${error.message}`);
+      }
       if (currentAction !== action) return;
       if (context.state !== "running") throw new Error("Your browser paused the audio. Try the sound button again.");
       playing = true;

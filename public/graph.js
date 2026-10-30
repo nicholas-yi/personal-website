@@ -89,12 +89,6 @@ export function mountGraphPlayground(root) {
   pencil.setAttribute("r", "1.5");
   svg.append(references, phantom, pencil, retained, live);
   plot.append(svg);
-  const dragCue = element("span", "kg-paper-cue", "hold + drag");
-  dragCue.setAttribute("aria-hidden", "true");
-  plot.append(dragCue);
-  const referenceNote = element("span", "kg-reference-note", "faint lines: existing ties");
-  referenceNote.setAttribute("aria-hidden", "true");
-  plot.append(referenceNote);
 
   for (const node of sketch.nodes) {
     const button = element("button", "kg-node");
@@ -372,7 +366,6 @@ export function mountGraphPlayground(root) {
     }
     rememberSketch(history, previous);
     candidates = [...saved.edge.nodeIds];
-    dragCue.hidden = true;
     drawRetained();
     updateState();
     reportStroke(saved.edge);
@@ -519,7 +512,6 @@ export function mountGraphPlayground(root) {
     resetMotion();
     if (sketch.edges.length) rememberSketch(history, sketch);
     sketch = createSketch();
-    dragCue.hidden = false;
     pending = null;
     clearLive();
     drawRetained();
@@ -538,7 +530,6 @@ export function mountGraphPlayground(root) {
     sketch = result.sketch;
     pending = null;
     clearLive();
-    dragCue.hidden = sketch.edges.length > 0;
     drawRetained();
     updateState();
     if (sketch.edges.length) reportStroke(sketch.edges.at(-1));

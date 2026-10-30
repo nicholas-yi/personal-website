@@ -1,8 +1,11 @@
-import { GRID_X, GRID_Y, OUTSIDE_RAIN_VISIBILITY, RAIN_INK, addRipple, createRain, moveShelter, overlapsText, rainOpacity, resizeRain, stepRain } from "./rain.js";
+import { GRID_X, GRID_Y, RAIN_INK, addRipple, createRain, moveShelter, indexText, overlapsIndexedText, rainOpacity, resizeRain, stepRain } from "./rain.js";
 import { createRainAudio } from "./rain-audio.js";
 import { installInteractionSounds } from "./interaction-sounds.js";
 import { installUmbrella } from "./umbrella.js";
 import { decorateHouse } from "./house.js";
+import { installListening } from "./listening.js";
+import { installHearth } from "./hearth.js";
+import { installPuddles } from "./puddles.js";
 
 const canvas = document.querySelector("#garden");
 const context = canvas.getContext("2d");
@@ -15,17 +18,47 @@ const status = document.querySelector("#garden-status");
 const hint = document.querySelector("#garden-hint");
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 const rain = createRain(document.documentElement.clientWidth, innerHeight);
+const puddles = installPuddles(document);
+
+const sectionLinks = [...document.querySelectorAll("nav a[href^='#']")].map((link) => ({
+  link,
+  section: document.getElementById(link.hash.slice(1)),
+})).filter(({ section }) => section);
+if (sectionLinks.length) {
+  const header = document.querySelector(".site-header");
+  let navigationFrame = 0;
+  function updateNavigation() {
+    navigationFrame = 0;
+    const marker = header.getBoundingClientRect().bottom + 24;
+    for (const { link, section } of sectionLinks) {
+      const bounds = section.getBoundingClientRect();
+      if (bounds.top <= marker && bounds.bottom > marker) link.setAttribute("aria-current", "location");
+      else link.removeAttribute("aria-current");
+    }
+  }
+  function scheduleNavigation() {
+    if (!navigationFrame) navigationFrame = requestAnimationFrame(updateNavigation);
+  }
+  window.addEventListener("scroll", scheduleNavigation, { passive: true });
+  window.addEventListener("resize", scheduleNavigation);
+  window.addEventListener("hashchange", scheduleNavigation);
+  new ResizeObserver(scheduleNavigation).observe(document.querySelector(".page"));
+  updateNavigation();
+}
 
 let motionEnabled = false;
 let frame = 0;
 let lastTime = 0;
 let nextFrameAt = 0;
 let protectedText = [];
+let textIndex;
 let readingArea;
 let windowPane;
 let textNeedsUpdate = true;
 let audio;
-let soundEnabled = false;
+let soundEnabled = true;
+let soundAwaitingGesture = true;
+let soundRequest = 0;
 let touchFadeTimer;
 
 function measureText() {
@@ -35,7 +68,7 @@ function measureText() {
     range.selectNodeContents(element);
     protectedText.push(...Array.from(range.getClientRects()));
   }
-  const column = document.querySelector(".work-section, .links-main, .about-main").getBoundingClientRect();
+  const column = document.querySelector(".work-section, .links-main, .about-main, .error-main").getBoundingClientRect();
   readingArea = {
     left: column.left - 6,
     right: column.right + 6,
@@ -52,11 +85,14 @@ function measureText() {
   for (const element of document.querySelectorAll(".work-art, .house-body, .hearth, [data-graph-playground]")) {
     protectedText.push(element.getBoundingClientRect());
   }
+  textIndex = indexText(rain.width, rain.height, protectedText);
+  const water = puddles.measure();
+  rain.groundY = water && water.top < innerHeight ? water.top + 55 : rain.height + 16;
   textNeedsUpdate = false;
 }
 
 function resize() {
-  const scale = Math.min(devicePixelRatio || 1, 2);
+  const scale = Math.min(devicePixelRatio || 1, 1.5);
   const width = document.documentElement.clientWidth;
   canvas.width = Math.round(width * scale);
   canvas.height = Math.round(innerHeight * scale);
@@ -67,7 +103,7 @@ function resize() {
 }
 
 function glyph(text, x, y, opacity) {
-  if (opacity < 0.005 || overlapsText(x, y, protectedText)) return;
+  if (opacity < 0.005 || overlapsIndexedText(textIndex, x, y)) return;
   context.globalAlpha = opacity;
   context.fillText(text, x, y);
 }
@@ -97,19 +133,8 @@ function render() {
     }
   }
 
-  for (const ripple of rain.ripples) {
-    const radius = 4 + ripple.age * 25;
-    const opacity = (1 - ripple.age / 1.8) * 0.42 * OUTSIDE_RAIN_VISIBILITY;
-    glyph("(", ripple.x - radius, rain.groundY, opacity);
-    glyph(")", ripple.x + radius, rain.groundY, opacity);
-    glyph("~", ripple.x, rain.groundY + 3, opacity * 0.7);
-  }
-
-  for (let x = 11; x < rain.width; x += GRID_X) {
-    const opacity = rainOpacity(rain, x, rain.groundY + 13, readingArea, undefined) * 0.5;
-    glyph(Math.sin(x * 0.08) > 0 ? "_" : ".", x, rain.groundY + 13, opacity);
-  }
   context.globalAlpha = 1;
+  puddles.render(rain.time, rain.ripples);
 }
 
 function draw(now) {
@@ -120,8 +145,7 @@ function draw(now) {
   rain.umbrella = umbrella.canopy();
   stepRain(rain, lastTime ? (now - lastTime) / 1000 : 1 / 30);
   lastTime = now;
-  nextFrameAt = (nextFrameAt || now) + 1000 / 30;
-  if (nextFrameAt < now - 1000 / 30) nextFrameAt = now + 1000 / 30;
+  nextFrameAt = now + 1000 / 24;
   render();
   if (soundEnabled) audio?.shelter(rain.shelter.strength);
 }
@@ -142,6 +166,8 @@ function setMotion(enabled) {
   motionEnabled = enabled && Boolean(context);
   motionButton.setAttribute("aria-pressed", String(motionEnabled));
   motionLabel.textContent = motionEnabled ? "rain on" : "rain paused";
+  motionButton.setAttribute("aria-label", motionEnabled ? "Pause rain animation" : "Enable rain animation");
+  motionButton.title = motionButton.getAttribute("aria-label");
   document.documentElement.dataset.rain = motionEnabled ? "moving" : "still";
   if (hint) {
     hint.hidden = false;
@@ -159,12 +185,24 @@ function setMotion(enabled) {
   render();
 }
 
+function labelSound(enabled, loading = false) {
+  soundLabel.textContent = loading ? "sound loading" : `sound ${enabled ? "on" : "off"}`;
+  soundButton.setAttribute("aria-label", enabled ? "Mute sound" : "Enable sound");
+  soundButton.title = soundButton.getAttribute("aria-label");
+  soundButton.setAttribute("aria-busy", String(loading));
+}
+
 async function setSound(enabled, feedback = false) {
-  soundButton.disabled = true;
+  const request = ++soundRequest;
+  soundEnabled = enabled;
+  soundButton.setAttribute("aria-pressed", String(enabled));
+  labelSound(enabled, enabled);
   try {
     if (enabled) {
       audio ??= createRainAudio();
       await audio.play();
+      if (request !== soundRequest) return;
+      stopWaitingForSound();
       audio.shelter(motionEnabled ? rain.shelter.strength : 0);
       if (document.hidden) await audio.pause();
       else if (feedback) audio.effect("sound-on");
@@ -172,20 +210,38 @@ async function setSound(enabled, feedback = false) {
       if (feedback && !document.hidden) audio.effect("sound-off");
       await audio.pause();
     }
+    if (request !== soundRequest) return;
     soundEnabled = enabled;
+    if (!enabled) stopWaitingForSound();
     soundButton.setAttribute("aria-pressed", String(enabled));
-    soundLabel.textContent = `sound ${enabled ? "on" : "off"}`;
+    labelSound(enabled);
     status.textContent = "";
   } catch (error) {
+    if (request !== soundRequest) return;
     console.error("Rain soundscape:", error);
+    if (enabled) soundEnabled = false;
+    stopWaitingForSound();
     soundButton.setAttribute("aria-pressed", String(soundEnabled));
-    soundLabel.textContent = `sound ${soundEnabled ? "on" : "off"}`;
+    labelSound(soundEnabled);
     status.textContent = error instanceof Error ? error.message : "The rain soundscape couldn't start. Please try again.";
-  } finally {
-    soundButton.disabled = false;
   }
 }
 
+function stopWaitingForSound() {
+  soundAwaitingGesture = false;
+  document.removeEventListener("pointerdown", startDefaultSound, true);
+  document.removeEventListener("keydown", startDefaultSound, true);
+}
+function startDefaultSound(event) {
+  if (!event.isTrusted || !soundEnabled || !soundAwaitingGesture || document.hidden ||
+      event.target.closest("#sound-toggle") || event.type === "pointerdown" && (event.button !== 0 || event.isPrimary === false) ||
+      event.type === "keydown" && !["Enter", " "].includes(event.key)) return;
+  stopWaitingForSound();
+  setSound(true);
+}
+soundButton.title = "Sound is enabled and starts with your first click or Enter/Space action.";
+document.addEventListener("pointerdown", startDefaultSound, true);
+document.addEventListener("keydown", startDefaultSound, true);
 motionButton.addEventListener("click", () => setMotion(!motionEnabled));
 soundButton.addEventListener("click", () => setSound(!soundEnabled, true));
 function playInteraction(kind) {
@@ -247,6 +303,8 @@ document.addEventListener("visibilitychange", async () => {
 });
 
 controls.hidden = false;
+installListening(document);
+installHearth(document);
 if (context) decorateHouse(document);
 if (!context) {
   motionButton.disabled = true;

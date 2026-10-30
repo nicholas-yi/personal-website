@@ -6,6 +6,20 @@
     <meta name="theme-color" content="#f8f7f2">
     <meta name="description" content="Nicholas Yi's public work: papers, writing, competition results, and speech accessibility projects.">
     <title>Links &amp; milestones - Nicholas Yi</title>
+    <link rel="canonical" href="https://nicholasyi.me/links">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Nicholas Yi">
+    <meta property="og:title" content="Links &amp; milestones - Nicholas Yi">
+    <meta property="og:description" content="Papers, field notes, competition results, and speech accessibility projects.">
+    <meta property="og:url" content="https://nicholasyi.me/links">
+    <meta property="og:image" content="https://nicholasyi.me/social-card.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Nicholas Yi. Building things that learn, remember, and work. An ASCII house shelters a small fireplace.">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://nicholasyi.me/social-card.png">
+    <meta name="twitter:image:alt" content="Nicholas Yi. Building things that learn, remember, and work. An ASCII house shelters a small fireplace.">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23f8f7f2'/%3E%3Ctext x='32' y='47' text-anchor='middle' font-family='monospace' font-size='54' fill='%235b6844'%3E*%3C/text%3E%3C/svg%3E">
     <link rel="stylesheet" href="styles.css">
     <script type="module" src="garden.js"></script>
@@ -29,7 +43,7 @@
         <ul class="social-links" aria-label="Find me online">
           <li><a href="mailto:nicholasyiofficial@gmail.com">email <span aria-hidden="true">&#8599;</span></a></li>
           <li><a href="https://www.linkedin.com/in/nicholasyiofficial/">linkedin <span aria-hidden="true">&#8599;</span></a></li>
-          <li><a href="https://www.kaggle.com/nicholasyi/competitions">kaggle <span aria-hidden="true">&#8599;</span></a></li>
+          <li><span class="resume-placeholder" title="Resume link coming soon">resume (soon)</span></li>
         </ul>
         <section class="public-links" aria-labelledby="public-links-heading">
           <div class="section-heading">
@@ -37,15 +51,16 @@
           </div>
           <ol class="public-link-list">
             <li class="public-link-entry" data-work="mai">
-              <div class="eyebrow">current rotation / <time datetime="2026-07">Jul 2026</time> &ndash; present</div>
+              <div class="eyebrow"><time datetime="2025-07">Jul 2025</time> &ndash; present</div>
               <h3><a href="https://microsoft.ai/">Microsoft AI Development and Acceleration <span class="external-arrow" aria-hidden="true">&#8599;</span></a></h3>
               <p>Agent harnesses and evaluation tools for faster research iteration.</p>
             </li>
             <li class="public-link-entry" data-work="stashbird">
-              <div class="eyebrow">paper / published <time datetime="2026-09">Sep 2026</time></div>
+              <div class="eyebrow">Collaborative Apps and Platform (CAP) / Microsoft Teams</div>
               <h3><a href="https://arxiv.org/abs/2609.34242">Stashbird <span class="external-arrow" aria-hidden="true">&#8599;</span></a></h3>
               <p>Episode-Grounded Lifecycle Reconciliation for Conversational Agent Memory. Co-author; arXiv preprint.</p>
               <div class="work-links">
+                <span>preprint <time datetime="2026-09">Sep 2026</time></span><span aria-hidden="true">/</span>
                 <a href="https://arxiv.org/abs/2609.34242">arXiv <span aria-hidden="true">&#8599;</span></a><span aria-hidden="true">/</span>
                 <a href="https://arxiv.org/pdf/2609.34242" aria-label="Stashbird preprint PDF">PDF <span aria-hidden="true">&#8599;</span></a>
               </div>
@@ -59,7 +74,7 @@
               <div class="eyebrow">accessibility / Microsoft Global Hackathon / <time datetime="2025-11">Nov 2025</time></div>
               <h3><a href="https://github.com/microsoft/Staccato-Stuttered-ASR">Staccato <span class="external-arrow" aria-hidden="true">&#8599;</span></a></h3>
               <p>Speech recognition designed to better understand people who stutter.</p>
-              <p class="project-recognition">Team 1st place &#183; Ability Hack Executive Challenge</p>
+              <p class="project-recognition"><a href="https://www.credly.com/badges/6e507446-96ac-45cc-89e7-e40440959f6c">Team 1st place &#183; Ability Hack Executive Challenge</a></p>
               <div class="work-links"><a href="https://github.com/microsoft/Staccato-Stuttered-ASR">project code <span aria-hidden="true">&#8599;</span></a></div>
             </li>
             <li class="public-link-entry" id="hateful-memes">
@@ -134,12 +149,15 @@
         <a href="#main">back to top <span aria-hidden="true">&#8593;</span></a>
       </footer>
     </div>
+    <div class="page-puddles" aria-hidden="true"><pre>   .:~:..             ..:~:.
+ .:~~~~~:.          .:~~~~~:.
+   ':::'              ':::'</pre><canvas></canvas></div>
     <aside class="garden-controls" aria-label="Rain settings" hidden>
-      <button id="motion-toggle" type="button" aria-pressed="false"><span class="control-rain" aria-hidden="true">:|</span><span id="motion-label">rain paused</span></button>
+      <button id="motion-toggle" type="button" aria-pressed="false" aria-label="Enable rain animation" title="Enable rain animation"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" aria-hidden="true"><path d="M5 10a3 3 0 1 1 1-5 4 4 0 0 1 8 1 2.5 2.5 0 0 1 1 5H5m1 2-1 3m5-3-1 4m5-4-1 3"/><path class="control-off" d="m3 3 14 14"/></svg><span id="motion-label" class="sr-only">rain paused</span></button>
       <span class="control-divider" aria-hidden="true"></span>
-      <button id="sound-toggle" type="button" aria-pressed="false">
-        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" aria-hidden="true"><path d="M8 6 5 8H2v4h3l3 2V6Z"/><path class="sound-waves" d="M11 7a5 5 0 0 1 0 6m3-9a9 9 0 0 1 0 12"/><path class="sound-muted" d="m12 8 4 4m0-4-4 4"/></svg>
-        <span id="sound-label">sound off</span>
+      <button id="sound-toggle" type="button" aria-pressed="true" aria-label="Mute sound" title="Mute sound">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" aria-hidden="true"><path d="M8 6 5 8H2v4h3l3 2V6Z"/><path class="sound-waves" d="M11 7a5 5 0 0 1 0 6m3-9a9 9 0 0 1 0 12"/><path class="sound-muted" d="m3 3 14 14"/></svg>
+        <span id="sound-label" class="sr-only">sound on</span>
       </button>
     </aside>
     <p id="garden-status" class="garden-status" role="status"></p>

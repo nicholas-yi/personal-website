@@ -62,15 +62,6 @@
   opacity: 0.34;
 }
 
-.kg-reference-note {
-  position: absolute;
-  right: 12px;
-  bottom: 8px;
-  color: #78816c;
-  font: 9px/1.5 var(--mono);
-  pointer-events: none;
-}
-
 .kg-pointer-trail {
   fill: none;
   stroke: #a85e52;
@@ -83,19 +74,6 @@
 .kg-pointer-tip {
   fill: #a85e52;
   filter: drop-shadow(0 0 2px #b76a5a66);
-  opacity: 0;
-}
-
-.kg-paper-cue {
-  position: absolute;
-  bottom: 8px;
-  left: 12px;
-  color: #78816c;
-  font: italic 11px/1.5 var(--serif, Georgia, serif);
-  pointer-events: none;
-}
-
-[data-graph-state="drawing"] .kg-paper-cue {
   opacity: 0;
 }
 
@@ -329,11 +307,15 @@
   white-space: nowrap;
 }
 
+@media (max-width: 650px) {
+  .kg-result-message { font-size: 1rem; }
+  .kg-result-route, .kg-limit-note, .kg-source { font-size: 0.875rem; }
+}
+
 @media (max-width: 620px) {
   .kg-node {
     max-width: calc(50% - 18px);
   }
-  .kg-reference-note { top: 8px; bottom: auto; font-size: 8px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

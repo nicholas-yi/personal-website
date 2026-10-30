@@ -16,7 +16,7 @@ const seed = [
   ["photography", "film photography", "Something I enjoy away from the screen.", 4, "film"],
   ["staccato", "Staccato / accessibility", "My brother stutters, so speech accessibility is personal to me. Our Staccato team won the Ability Hack Executive Challenge at the Microsoft Global Hackathon in November 2025.", 3, "speech"],
   ["evaluation", "evaluation", "I build evaluation tools to help research teams test agents and compare their progress.", 2, "eval"],
-  ["museums", "art museums", "My art-history work has included studying Rodin at Stanford. I wrote about his nonconformity and lasting influence.", 5, "art"],
+  ["museums", "art museums", "I've volunteered on archival art documentation at Stanford's Cantor Arts Center and written about Rodin's lasting influence.", 5, "art"],
   ["opensource", "open source", "I like work that others can inspect and build on. Staccato's speech-recognition code is public in Microsoft's GitHub organization.", 8],
 ];
 
