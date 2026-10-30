@@ -58,7 +58,6 @@ export function mountGraphPlayground(root) {
   }
 
   const shell = element("div", "kg-playground");
-  const alternate = element("p", "kg-alternate", "Draw a line, or tap two dots.");
   const keyboardHelp = element(
     "span", "kg-sr-only",
     "Draw through up to three dots, or click or tap two. Keyboard: focus a dot and press Enter or Space, then choose another. Escape cancels. On touch screens, swipe outside the paper to scroll.",
@@ -138,10 +137,11 @@ export function mountGraphPlayground(root) {
   limitNote.hidden = true;
   const sources = element("div", "kg-sources");
   status.append(kind, message, limitNote, sources);
-  shell.append(alternate, plot, underneath, status, keyboardHelp);
+  shell.append(plot, underneath, status, keyboardHelp);
 
   function report(type, text, links = []) {
     status.dataset.kind = type;
+    status.classList.toggle("kg-sr-only", type === "ready");
     kind.textContent = {
       known: "known connection",
       playful: "a playful parallel",
@@ -150,7 +150,7 @@ export function mountGraphPlayground(root) {
       pending: "first dot",
       retry: "try another line",
       cancelled: "pencil lifted",
-      ready: "a few things about me",
+      ready: "",
     }[type];
     message.textContent = text;
     limitNote.textContent = "";
@@ -564,7 +564,7 @@ export function mountGraphPlayground(root) {
     drawRetained();
   });
 
-  report("ready", "Pick a dot.");
+  report("ready", "");
   root.replaceChildren(shell);
   relayout();
   updateState();

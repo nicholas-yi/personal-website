@@ -8,24 +8,9 @@
   color: var(--kg-ink);
 }
 
-.kg-instruction,
-.kg-alternate,
 .kg-result-message {
   margin: 0;
   overflow-wrap: anywhere;
-}
-
-.kg-instruction {
-  font-family: var(--serif, Georgia, serif);
-  font-size: 1.15rem;
-  line-height: 1.5;
-}
-
-.kg-alternate {
-  margin-top: 0.15rem;
-  margin-bottom: 1rem;
-  font-size: 0.85rem;
-  line-height: 1.5;
 }
 
 .kg-plot {
@@ -266,6 +251,8 @@
   padding: 0.85rem 0 0.5rem;
   border-top: 1px solid var(--kg-line);
 }
+
+.kg-status.kg-sr-only { min-height: 0; margin: 0; padding: 0; border: 0; }
 
 .kg-result-kind {
   display: block;

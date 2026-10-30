@@ -74,6 +74,7 @@ export function umbrellaOccluded(bounds, foregrounds) {
 export function installUmbrella(doc, { onChange = () => {}, onToggle = () => {} } = {}) {
   const view = doc.defaultView;
   const reducedMotion = view.matchMedia("(prefers-reduced-motion: reduce)");
+  const finePointer = view.matchMedia("(hover: hover) and (pointer: fine)");
   const umbrella = createUmbrella();
   const art = doc.createElement("pre");
   art.className = "click-umbrella";
@@ -93,8 +94,11 @@ export function installUmbrella(doc, { onChange = () => {}, onToggle = () => {} 
     art.style.left = `${umbrella.x}px`;
     art.style.top = `${umbrella.y}px`;
     art.dataset.state = umbrella.open ? "open" : "closed";
+    if (doc.documentElement.hasAttribute("data-umbrella-cursor")) {
+      doc.documentElement.dataset.umbrellaCursor = art.dataset.state;
+    }
     art.dataset.progress = umbrella.progress.toFixed(2);
-    const foregrounds = [...doc.querySelectorAll(".play-section, .about-section")].map((element) => element.getBoundingClientRect());
+    const foregrounds = [...doc.querySelectorAll(".play-section, .house-shelter")].map((element) => element.getBoundingClientRect());
     const occluded = umbrella.placed && umbrellaOccluded(art.getBoundingClientRect(), foregrounds);
     art.dataset.occluded = String(occluded);
     art.hidden = !umbrella.placed || occluded;
@@ -110,20 +114,36 @@ export function installUmbrella(doc, { onChange = () => {}, onToggle = () => {} 
     view.cancelAnimationFrame(frame);
     frame = 0;
     pressed = null;
+    clearCursor();
     umbrella.progress = Number(umbrella.open);
     render();
   }
   function excluded(target) {
-    return target.closest?.("a, button, input, textarea, select, [contenteditable], [data-graph-playground], .play-section, .about-section, .site-header");
+    return !target?.closest || target.closest("a, button, input, textarea, select, summary, label, [role='button'], [role='link'], [contenteditable], [data-graph-playground], .play-section, .house-shelter, .site-header, .site-footer, .garden-note, .work-art, .hearth, p, li, dt, dd, h1, h2, h3, h4, pre, .eyebrow, figure, .window-caption");
   }
+  function clearCursor() {
+    delete doc.documentElement.dataset.umbrellaCursor;
+  }
+  function updateCursor(event) {
+    if (!finePointer.matches || event.pointerType === "touch" || excluded(event.target)) {
+      clearCursor();
+      return;
+    }
+    const state = umbrella.open ? "open" : "closed";
+    if (doc.documentElement.dataset.umbrellaCursor !== state) doc.documentElement.dataset.umbrellaCursor = state;
+  }
+  doc.addEventListener("pointerover", updateCursor, true);
+  doc.addEventListener("pointerout", (event) => { if (!event.relatedTarget) clearCursor(); }, true);
   doc.addEventListener("pointerdown", (event) => {
+    updateCursor(event);
     pressed = event.button === 0 && event.isPrimary !== false && !excluded(event.target)
       ? { x: event.clientX, y: event.clientY, id: event.pointerId, moved: false } : null;
   }, true);
   doc.addEventListener("pointermove", (event) => {
+    updateCursor(event);
     if (pressed?.id === event.pointerId && Math.hypot(event.clientX - pressed.x, event.clientY - pressed.y) > 6) pressed.moved = true;
   }, true);
-  doc.addEventListener("pointercancel", () => { pressed = null; }, true);
+  doc.addEventListener("pointercancel", () => { pressed = null; clearCursor(); }, true);
   doc.addEventListener("click", (event) => {
     if (event.defaultPrevented || event.button > 0 || event.detail === 0 || excluded(event.target) || pressed?.moved) return;
     if (!doc.getSelection()?.isCollapsed) return;
@@ -140,13 +160,14 @@ export function installUmbrella(doc, { onChange = () => {}, onToggle = () => {} 
     if (!reducedMotion.matches) frame = view.requestAnimationFrame(animate);
   });
   reducedMotion.addEventListener("change", settle);
+  finePointer.addEventListener("change", clearCursor);
   doc.addEventListener("visibilitychange", () => { if (doc.hidden) settle(); });
   view.addEventListener("blur", settle);
   view.addEventListener("resize", () => {
     positionUmbrella(umbrella, umbrella.x, umbrella.y, doc.documentElement.clientWidth, Math.max(doc.documentElement.scrollHeight, view.innerHeight));
     settle();
   });
-  view.addEventListener("scroll", render, { passive: true });
+  view.addEventListener("scroll", () => { clearCursor(); render(); }, { passive: true });
   new view.ResizeObserver(render).observe(doc.querySelector(".page"));
   return {
     canopy() {

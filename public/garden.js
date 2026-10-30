@@ -30,12 +30,12 @@ let touchFadeTimer;
 
 function measureText() {
   protectedText = [];
-  for (const element of document.querySelectorAll("h1, h2, h3, h4, p, dt, dd, a, .eyebrow, .work-links, .section-aside, .garden-controls, .about-garden, [data-window-ink], .window-caption")) {
+  for (const element of document.querySelectorAll("h1, h2, h3, h4, p, dt, dd, a, .eyebrow, .work-links, .garden-controls, .about-garden, [data-window-ink], .window-caption")) {
     const range = document.createRange();
     range.selectNodeContents(element);
     protectedText.push(...Array.from(range.getClientRects()));
   }
-  const column = document.querySelector(".work-section, .links-main").getBoundingClientRect();
+  const column = document.querySelector(".work-section, .links-main, .about-main").getBoundingClientRect();
   readingArea = {
     left: column.left - 6,
     right: column.right + 6,

@@ -5,6 +5,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const assets = new Map([
   ["/", ["index.html", "text/html; charset=utf-8"]],
   ["/index.html", ["index.html", "text/html; charset=utf-8"]],
+  ["/about", ["about.html", "text/html; charset=utf-8"]],
+  ["/about.html", ["about.html", "text/html; charset=utf-8"]],
   ["/links", ["links.html", "text/html; charset=utf-8"]],
   ["/links.html", ["links.html", "text/html; charset=utf-8"]],
   ["/styles.css", ["styles.css", "text/css; charset=utf-8"]],
