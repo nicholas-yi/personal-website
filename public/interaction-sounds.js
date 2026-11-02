@@ -37,6 +37,7 @@ export function classifyActivation({ href = null, control = null, inGraph = fals
 function describeTarget(target, baseURL, background = false) {
   const element = target?.nodeType === 3 ? target.parentElement : target;
   if (!element?.closest) return null;
+  if (element.closest(".click-umbrella")) return null;
   const anchor = element.closest("a[href]");
   const button = element.closest("button");
   return classifyActivation({

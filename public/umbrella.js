@@ -1,4 +1,5 @@
 export const UMBRELLA_COLUMNS = 17;
+export const UMBRELLA_REPLACE_DISTANCE = 120;
 const handle = ["        |", "        |", "      \\_/"];
 const frame = (canopy) => [...canopy, ...handle].map((line) => line.padEnd(UMBRELLA_COLUMNS)).join("\n");
 // Keep the shaft at column eight in every frame; centering rows separately bends the handle.
@@ -21,10 +22,32 @@ function positionUmbrella(umbrella, x, y, width, height) {
   umbrella.y = Math.min(height - padY, Math.max(padY, y));
 }
 
-export function toggleUmbrella(umbrella, x, y, width, height, still = false) {
+function checkPosition(x, y, width, height) {
   if (![x, y, width, height].every(Number.isFinite) || width <= 0 || height <= 0) {
     throw new TypeError("An umbrella needs a finite pointer position and positive viewport dimensions.");
   }
+}
+
+export function moveUmbrella(umbrella, x, y, width, height) {
+  checkPosition(x, y, width, height);
+  positionUmbrella(umbrella, x, y, width, height);
+}
+
+export function activateUmbrella(umbrella, x, y, width, height, still = false) {
+  checkPosition(x, y, width, height);
+  if (!umbrella.placed || Math.hypot(x - umbrella.x, y - umbrella.y) > UMBRELLA_REPLACE_DISTANCE) {
+    positionUmbrella(umbrella, x, y, width, height);
+    umbrella.placed = true;
+    umbrella.open = true;
+    umbrella.progress = still ? 1 : 0;
+  } else {
+    umbrella.open = !umbrella.open;
+    if (still) umbrella.progress = Number(umbrella.open);
+  }
+}
+
+export function toggleUmbrella(umbrella, x, y, width, height, still = false) {
+  checkPosition(x, y, width, height);
   if (!umbrella.open) {
     positionUmbrella(umbrella, x, y, width, height);
     umbrella.placed = true;
@@ -76,9 +99,9 @@ export function installUmbrella(doc, { onChange = () => {}, onToggle = () => {} 
   const reducedMotion = view.matchMedia("(prefers-reduced-motion: reduce)");
   const finePointer = view.matchMedia("(hover: hover) and (pointer: fine)");
   const umbrella = createUmbrella();
-  const art = doc.createElement("pre");
+  const art = doc.createElement("button");
+  art.type = "button";
   art.className = "click-umbrella";
-  art.setAttribute("aria-hidden", "true");
   art.hidden = true;
   const rows = Math.max(...UMBRELLA_FRAMES.map((frame) => frame.split("\n").length));
   art.style.width = `${UMBRELLA_COLUMNS}ch`;
@@ -87,6 +110,13 @@ export function installUmbrella(doc, { onChange = () => {}, onToggle = () => {} 
   let pressed = null;
   let frame = 0;
   let lastTime = 0;
+  let suppressClick = false;
+  function dimensions() {
+    return { width: doc.documentElement.clientWidth, height: Math.max(doc.documentElement.scrollHeight, view.innerHeight) };
+  }
+  function foregrounds() {
+    return [...doc.querySelectorAll(".play-section, .house-shelter, .site-header, .site-footer")].map((element) => element.getBoundingClientRect());
+  }
 
   function render() {
     art.hidden = !umbrella.placed;
@@ -98,8 +128,9 @@ export function installUmbrella(doc, { onChange = () => {}, onToggle = () => {} 
       doc.documentElement.dataset.umbrellaCursor = art.dataset.state;
     }
     art.dataset.progress = umbrella.progress.toFixed(2);
-    const foregrounds = [...doc.querySelectorAll(".play-section, .house-shelter")].map((element) => element.getBoundingClientRect());
-    const occluded = umbrella.placed && umbrellaOccluded(art.getBoundingClientRect(), foregrounds);
+    art.setAttribute("aria-label", `${umbrella.open ? "Open" : "Folded"} umbrella. Click to ${umbrella.open ? "fold" : "open"}; drag or use arrow keys to move.`);
+    art.title = "Drag to move; click to fold/open. Arrow keys move; Shift moves farther.";
+    const occluded = umbrella.placed && umbrellaOccluded(art.getBoundingClientRect(), foregrounds());
     art.dataset.occluded = String(occluded);
     art.hidden = !umbrella.placed || occluded;
     onChange();
@@ -113,19 +144,20 @@ export function installUmbrella(doc, { onChange = () => {}, onToggle = () => {} 
   function settle() {
     view.cancelAnimationFrame(frame);
     frame = 0;
-    pressed = null;
+    endPress();
     clearCursor();
     umbrella.progress = Number(umbrella.open);
     render();
   }
   function excluded(target) {
+    if (target === art) return false;
     return !target?.closest || target.closest("a, button, input, textarea, select, summary, label, [role='button'], [role='link'], [contenteditable], [data-graph-playground], .play-section, .house-shelter, .site-header, .site-footer, .garden-note, .work-art, .hearth, p, li, dt, dd, h1, h2, h3, h4, pre, .eyebrow, figure, .window-caption");
   }
   function clearCursor() {
     delete doc.documentElement.dataset.umbrellaCursor;
   }
   function updateCursor(event) {
-    if (!finePointer.matches || event.pointerType === "touch" || excluded(event.target)) {
+    if (!finePointer.matches || event.pointerType === "touch" || event.target === art || excluded(event.target)) {
       clearCursor();
       return;
     }
@@ -135,21 +167,63 @@ export function installUmbrella(doc, { onChange = () => {}, onToggle = () => {} 
   doc.addEventListener("pointerover", updateCursor, true);
   doc.addEventListener("pointerout", (event) => { if (!event.relatedTarget) clearCursor(); }, true);
   doc.addEventListener("pointerdown", (event) => {
+    suppressClick = false;
     updateCursor(event);
     pressed = event.button === 0 && event.isPrimary !== false && !excluded(event.target)
-      ? { x: event.clientX, y: event.clientY, id: event.pointerId, moved: false } : null;
+      ? { x: event.clientX, y: event.clientY, id: event.pointerId, moved: false, dragging: event.target === art, anchorX: umbrella.x, anchorY: umbrella.y, scrollX: view.scrollX, scrollY: view.scrollY } : null;
+    if (pressed?.dragging) {
+      art.setPointerCapture(event.pointerId);
+      event.preventDefault();
+    }
   }, true);
   doc.addEventListener("pointermove", (event) => {
     updateCursor(event);
     if (pressed?.id === event.pointerId && Math.hypot(event.clientX - pressed.x, event.clientY - pressed.y) > 6) pressed.moved = true;
+    if (pressed?.id === event.pointerId && pressed.dragging && pressed.moved) {
+      event.preventDefault();
+      art.dataset.dragging = "true";
+      moveTo(pressed.anchorX + event.clientX - pressed.x + view.scrollX - pressed.scrollX, pressed.anchorY + event.clientY - pressed.y + view.scrollY - pressed.scrollY);
+    }
   }, true);
-  doc.addEventListener("pointercancel", () => { pressed = null; clearCursor(); }, true);
+  function endPress() {
+    const active = pressed;
+    pressed = null;
+    if (active?.moved) suppressClick = true;
+    if (active?.dragging && art.hasPointerCapture(active.id)) art.releasePointerCapture(active.id);
+    delete art.dataset.dragging;
+  }
+  function moveTo(x, y) {
+    const before = { x: umbrella.x, y: umbrella.y };
+    const size = dimensions();
+    moveUmbrella(umbrella, x, y, size.width, size.height);
+    const bounds = art.getBoundingClientRect();
+    const dx = umbrella.x - before.x;
+    const dy = umbrella.y - before.y;
+    if (umbrellaOccluded({ left: bounds.left + dx, right: bounds.right + dx, top: bounds.top + dy, bottom: bounds.bottom + dy }, foregrounds())) {
+      umbrella.x = before.x;
+      umbrella.y = before.y;
+      return;
+    }
+    render();
+  }
+  doc.addEventListener("pointerup", endPress, true);
+  doc.addEventListener("pointercancel", () => { endPress(); clearCursor(); }, true);
+  art.addEventListener("lostpointercapture", () => { if (pressed?.dragging) endPress(); });
+  art.addEventListener("keydown", (event) => {
+    const offsets = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+    if (!Object.hasOwn(offsets, event.key)) return;
+    event.preventDefault();
+    const distance = event.shiftKey ? 36 : 12;
+    const [x, y] = offsets[event.key];
+    moveTo(umbrella.x + x * distance, umbrella.y + y * distance);
+  });
   doc.addEventListener("click", (event) => {
-    if (event.defaultPrevented || event.button > 0 || event.detail === 0 || excluded(event.target) || pressed?.moved) return;
+    if (suppressClick) { suppressClick = false; return; }
+    if (event.defaultPrevented || event.button > 0 || event.detail === 0 && event.target !== art || excluded(event.target)) return;
     if (!doc.getSelection()?.isCollapsed) return;
     pressed = null;
-    toggleUmbrella(
-      umbrella, event.clientX + view.scrollX, event.clientY + view.scrollY,
+    activateUmbrella(
+      umbrella, event.target === art ? umbrella.x : event.clientX + view.scrollX, event.target === art ? umbrella.y : event.clientY + view.scrollY,
       doc.documentElement.clientWidth, Math.max(doc.documentElement.scrollHeight, view.innerHeight),
       reducedMotion.matches,
     );

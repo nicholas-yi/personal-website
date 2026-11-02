@@ -32,6 +32,32 @@ test("the homepage serves real content and working local assets", async () => {
   }
 });
 
+test("wisps use compositor-friendly drift instead of changing shape and blurred filters every frame", async () => {
+  const css = await (await fetch(`${origin}/styles.css`)).text();
+  assert.ok(css.includes("@keyframes thought-drift"));
+  assert.ok(css.includes(".thought-bubble:is(:hover, :focus-within) .thought-wisp"));
+  assert.match(css, /@keyframes thought-drift \{[^}]*opacity: 0\.22; transform:/);
+  const thoughts = await (await fetch(`${origin}/thoughts.js`)).text();
+  assert.ok(!thoughts.includes("style.borderRadius"));
+  const garden = await (await fetch(`${origin}/garden.js`)).text();
+  assert.ok(garden.includes("if (layoutNeedsUpdate)"));
+  assert.ok(garden.includes('element.closest(".house-body, .work-art, [data-graph-playground]'));
+  assert.ok(garden.includes("sceneGeometry.rectangles.map(viewportRect)"));
+  assert.ok(garden.includes("rainGlyphs.draw(context, text, x, y)"));
+  assert.ok(!css.match(/backdrop-filter:\s*blur/));
+  assert.equal((await fetch(`${origin}/rain-glyphs.js`)).status, 200);
+});
+
+test("mailbox approach and departure are local decorative behavior without intercepting the email link", async () => {
+  const html = await (await fetch(origin)).text();
+  assert.ok(html.includes('class="mailbox-art" aria-hidden="true"><span class="perching-mail"'));
+  const source = await (await fetch(`${origin}/mailbox.js`)).text();
+  assert.ok(source.includes('mailbox.addEventListener("pointerenter"'));
+  assert.ok(source.includes('mailbox.addEventListener("focusin"'));
+  assert.ok(source.includes('setPhase("perched")'));
+  assert.ok(source.includes('setPhase("departing")'));
+  assert.ok(!source.includes("preventDefault"));
+});
 test("HEAD requests return the same metadata with no body", async () => {
   const response = await fetch(origin, { method: "HEAD" });
   assert.equal(response.status, 200);
@@ -77,7 +103,7 @@ it's where i keep my research, writing, and a few things i'm into. it also rains
 
 - **the rain** — move your cursor through it and it'll part around you. it drips off the roof and ripples the puddle at the bottom
 - **umbrellas** — click to open one. click again to fold it. i always have so many extra ones, feel free to ask me for one...
-- **sound** — on by default. click around for more. natural rain recordings, with little click sounds made in browser
+- **sound** — on by default. click around for more. natural rain and fireplace recordings, with little click sounds made in browser
 - **the graph** — connect my interests and see how they're related
 
 no frameworks, no build step, no tracking. just good ole html, css, and js.
@@ -91,7 +117,7 @@ no frameworks, no build step, no tracking. just good ole html, css, and js.
 
 push to \`main\` → tests run → cloudflare deploys it. if a test fails, nothing goes live.
 
-the ascii art, animation, and interaction sounds are original. the rain recordings are CC0; see [credits](AUDIO-CREDITS.md). feel free to look around.
+the ascii art, animation, and interaction sounds are original. the rain and fireplace recordings are CC0; see [credits](AUDIO-CREDITS.md). feel free to look around.
 `);
 });
 
@@ -229,16 +255,81 @@ test("public accomplishments link to the paper, PDF, article, and official compe
     "https://medium.com/data-science-at-microsoft/graphrag-beyond-the-demo-lessons-from-the-trenches-add83180f849",
     "https://www.kaggle.com/competitions/kuzushiji-recognition/leaderboard",
     "https://www.drivendata.org/competitions/70/hateful-memes-phase-2/leaderboard/#leaderRow_151286",
-    "https://www.kaggle.com/nicholasyi/competitions",
     "https://github.com/microsoft/Staccato-Stuttered-ASR",
   ]) assert.ok(html.includes(`href="${url}"`), url);
-  assert.ok(html.includes("17th place") && html.includes("18th place"));
+  assert.ok(html.includes("17th out of 293 teams") && html.includes("18th place in Phase 2; 3,000+ participants across the challenge"));
+  assert.ok(html.includes("logographic &amp; linguistic OCR"));
+  assert.ok(!html.includes("Japanese handwritten"));
   assert.ok(html.includes('aria-label="Stashbird preprint PDF"'));
   assert.ok(html.includes('aria-label="Kuzushiji Recognition final leaderboard"'));
   assert.ok(html.includes('aria-label="Hateful Memes Phase 2 result, nickyi in eighteenth place"'));
   assert.ok(!html.includes("https://patents.google.com/"));
+  assert.ok(!html.includes("My Kaggle competitions") && !html.includes("more experiments"));
 });
 
+test("header outline preserves the existing padding and the denser decorative scene stays bounded", async () => {
+  const css = await (await fetch(`${origin}/styles.css`)).text();
+  assert.match(css, /\.site-header::before \{[^}]*inset: 8px -12px;[^}]*pointer-events: none/);
+  assert.match(css, /\.site-header \{[^}]*padding: 18px 0/);
+  assert.ok(css.includes(".record-notes i:nth-child(6)"));
+  assert.ok(css.includes("mail-arrival 20s"));
+  const home = await (await fetch(origin)).text();
+  const notes = home.match(/<span class="record-notes">([\s\S]*?)<\/span>/)[1];
+  assert.equal((notes.match(/<i>/g) || []).length, 6);
+  assert.equal((home.match(/class="winged-mail(?: mail-late)?"/g) || []).length, 2);
+});
+
+test("Links fireplace includes a grounded thinking chair and three accessible future questions", async () => {
+  const html = await (await fetch(`${origin}/links.html`)).text();
+  assert.ok(html.includes('class="hearth-companions thinking-hearth"'));
+  assert.ok(html.includes('class="thinking-chair"'));
+  assert.ok(html.includes("rocking armchair angled toward the fireplace"));
+  const chair = html.match(/<figure class="thinking-chair"[\s\S]*?<\/figure>/)[0];
+  const chairArt = chair.match(/<pre class="thinking-chair-art" aria-hidden="true">([\s\S]*?)<\/pre>/)[1].replace(/\r\n/g, "\n");
+  assert.equal(chairArt.split("\n").length, 15);
+  assert.match(chairArt, /^[\x20-\x7e\n]+$/);
+  assert.deepEqual(chairArt.split("\n").slice(0, 7), [
+    "  .--------.",
+    " /   .----. \\",
+    " |\\   \\    \\ \\",
+    " | \\   \\    \\ \\",
+    " |  \\   '----' )",
+    " '-. '--------'",
+    " (  \\.--------'-.",
+  ]);
+  assert.equal(chairArt.split("\n").slice(7).join("\n"), [
+    "(  .------------'--'",
+    " \\  \\             \\",
+    "  \\  '-----------. )",
+    "   '---._________.-'",
+    "       / |    / |",
+    "      /  |   /  |",
+    "  \\__'___|__'___|___/",
+    "    '---..____..---'",
+  ].join("\n"));
+  assert.ok(!chair.includes("<svg") && !chair.includes("<img") && !chair.includes("<animate"));
+  const css = await (await fetch(`${origin}/styles.css`)).text();
+  assert.match(css, /\.thinking-chair-art \{[^}]*align-self: end;[^}]*font: var\(--object-font\)\/1\.2 var\(--mono\)/);
+  assert.ok(!css.includes("transform: scaleX(-1)"));
+  assert.ok(html.includes('What does a better score leave out?'));
+  assert.ok(html.includes('When does remembering become holding on?'));
+  assert.ok(html.includes('Can a correction keep its context?'));
+  assert.ok(html.includes('role="group" aria-label="Questions to ponder"'));
+  const buttons = [...html.matchAll(/<button class="thought-bubble"[^>]*data-question="([^"]+)"[^>]*>/g)];
+  assert.equal(buttons.length, 3);
+  for (const [button, question] of buttons) {
+    assert.ok(button.includes(`aria-label="${question}"`));
+    assert.ok(button.includes('aria-controls="thought-question"'));
+  }
+  assert.ok(html.includes('id="thought-question" role="status"'));
+  assert.ok(html.includes("<noscript><ul"));
+  const script = await fetch(`${origin}/thoughts.js`);
+  assert.equal(script.status, 200);
+  const source = await script.text();
+  assert.ok(source.includes('from "./graph-motion.js"'));
+  assert.ok(source.includes("nextFrame = now + 1000 / 30"));
+  assert.ok(source.includes('scene.dataset.motion === "moving" && !doc.hidden && !reduced.matches'));
+});
 test("work preserves chronology and the scoped team award alongside the requested accessibility motivation", async () => {
   const html = await (await fetch(origin)).text();
   assert.ok(html.includes("Speech recognition designed to better understand people who stutter."));
@@ -267,7 +358,7 @@ test("the links page puts current work first, then milestones in descending date
   assert.ok(html.includes('href="index.html#play"'));
   assert.ok(html.includes('href="links.html" aria-current="page"'));
   const entries = [...html.matchAll(/<li class="public-link-entry"[^>]*>([\s\S]*?)<\/li>/g)];
-  assert.equal(entries.length, 7);
+  assert.equal(entries.length, 6);
   const datedEntries = entries.filter((entry) => entry[1].includes("<time"));
   assert.deepEqual(datedEntries.map((entry) => entry[1].match(/datetime="([^"]+)"/)[1]),
     ["2025-07", "2026-09", "2026-04", "2025-11", "2020", "2019"]);
@@ -315,7 +406,7 @@ test("the sidequest staircases preserve the user's exact wording and reading ord
   assert.ok(!about.includes("developping"));
   assert.ok(!about.includes("or open-sourcing my work and entering online competitions"));
   assert.ok(about.includes("If any of those are your thing"));
-  assert.ok(!about.includes("Carnegie Mellon") && !about.includes("Amazon") && !about.includes("Cisco"));
+  assert.ok(!about.includes("Amazon") && !about.includes("Cisco"));
   assert.ok(!about.includes("One art-history sidequest:"));
   assert.ok(!about.includes("Sometimes, different neural layers."));
   assert.ok(!about.includes("Olympian") && !about.includes("competed in the Olympics"));
@@ -429,15 +520,88 @@ test("all pages have global navigation and a still-usable ASCII fireplace", asyn
   assert.ok(css.includes('[data-rain] .hearth-frame { animation: none; }'));
 });
 
+test("Links is one continuous roofed house with a floor for each discrete milestone", async () => {
+  const html = await (await fetch(`${origin}/links.html`)).text();
+  assert.ok(html.includes('class="links-house house-shelter"'));
+  assert.ok(html.indexOf('class="house-roof"') < html.indexOf("<h1>Links"));
+  assert.ok(html.indexOf('class="house-body"') < html.indexOf('class="public-links"'));
+  assert.ok(!html.includes("roofed-hearth"));
+  assert.equal((html.match(/class="house-roof"/g) || []).length, 1);
+  assert.equal((html.match(/class="house-body"/g) || []).length, 1);
+  assert.equal((html.match(/class="public-link-entry"/g) || []).length, 6);
+  const css = await (await fetch(`${origin}/styles.css`)).text();
+  assert.ok(css.includes(".links-house .public-link-entry { margin-inline: calc(-1 * var(--floor-inset))"));
+  assert.ok(css.includes(".links-house { --floor-inset: 12px; }"));
+});
+
+test("the added fireplace loop is a compact public audio asset and its proximity shares the weather lifecycle", async () => {
+  const response = await fetch(`${origin}/audio/fireplace.mp3`);
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("content-type"), "audio/mpeg");
+  const bytes = Buffer.from(await response.arrayBuffer());
+  assert.ok(bytes.length > 350000 && bytes.length < 550000);
+  const head = await fetch(`${origin}/audio/fireplace.mp3`, { method: "HEAD" });
+  assert.equal(Number(head.headers.get("content-length")), bytes.length);
+  assert.equal(await head.text(), "");
+  const garden = await (await fetch(`${origin}/garden.js`)).text();
+  assert.ok(garden.includes("fireplaceProximity(fireplace, innerHeight, Math.max(0, document.documentElement.scrollHeight - innerHeight - scrollY))"));
+  assert.ok(garden.includes('protectedText.push(listeningCard.getBoundingClientRect())'));
+  assert.ok(garden.includes('document.querySelectorAll(".page, .listening-card")'));
+  assert.ok(garden.includes("audio?.fireplace(fireplaceAmount)"));
+  const credits = await readFile(new URL("../AUDIO-CREDITS.md", import.meta.url), "utf8");
+  assert.ok(credits.includes("PagDev") && credits.includes("fireplace.mp3"));
+});
+
+test("placed umbrellas are focusable, draggable, and protected against synthetic drag clicks", async () => {
+  const umbrella = await (await fetch(`${origin}/umbrella.js`)).text();
+  assert.ok(umbrella.includes('const art = doc.createElement("button")'));
+  assert.ok(umbrella.includes("art.setPointerCapture(event.pointerId)"));
+  assert.ok(umbrella.includes('doc.addEventListener("pointerup", endPress, true)'));
+  assert.ok(umbrella.includes("if (suppressClick)"));
+  assert.ok(umbrella.includes('art.addEventListener("keydown"'));
+  const sounds = await (await fetch(`${origin}/interaction-sounds.js`)).text();
+  assert.ok(sounds.includes('if (element.closest(".click-umbrella")) return null;'));
+  const css = await (await fetch(`${origin}/styles.css`)).text();
+  assert.match(css, /\.click-umbrella \{[^}]*touch-action: none; cursor: grab/);
+});
+test("graph hover/focus keeps audio sheltered independently of visual rain motion", async () => {
+  const garden = await (await fetch(`${origin}/garden.js`)).text();
+  assert.ok(garden.includes('graphActivity?.addEventListener("pointerenter"'));
+  assert.ok(garden.includes('graphActivity?.addEventListener("pointerleave"'));
+  assert.ok(garden.includes('graphActivity?.addEventListener("focusin", applyAudioShelter)'));
+  assert.ok(garden.includes("queueMicrotask(applyAudioShelter)"));
+  assert.ok(garden.includes("graphHovered || graphActivity?.contains(document.activeElement)"));
+  assert.ok(garden.includes("audio?.shelter(graphSheltered ? 1 : motionEnabled ? rain.shelter.strength : 0)"));
+  assert.ok(garden.includes('window.addEventListener("blur", releaseInteractionShelter)'));
+  assert.ok(!garden.includes("if (soundEnabled) audio?.shelter(rain.shelter.strength)"));
+});
+
 test("the about house has picture-frame, fireplace, and flower furniture in the new requested order", async () => {
   const html = await (await fetch(`${origin}/about.html`)).text();
   assert.ok(html.includes('class="house-roof"'));
   assert.ok(html.includes('class="house-body"'));
   assert.ok(html.includes('class="house-furniture"'));
-  const row = html.slice(html.indexOf('class="house-furniture"'));
+  const row = html.slice(html.indexOf('class="house-furniture"')).replace(/\r\n/g, "\n");
   assert.ok(row.indexOf('class="picture-frame"') < row.indexOf('class="hearth"'));
   assert.ok(row.indexOf('class="hearth"') < row.indexOf('class="about-garden"'));
-  assert.ok(html.includes("An empty rectangular picture frame"));
+  assert.ok(!html.includes("An empty rectangular picture frame"));
+  assert.ok(html.includes('class="picture-photo" src="about-photo.png"'));
+  assert.ok(html.includes('loading="lazy" decoding="async" alt="Nicholas Yi."'));
+  assert.ok(html.includes("<span>and room to grow.</span>"));
+  const photo = await fetch(`${origin}/about-photo.png`);
+  assert.equal(photo.status, 200);
+  assert.match(photo.headers.get("content-type"), /image\/png/);
+  const png = Buffer.from(await photo.arrayBuffer());
+  assert.deepEqual([...png.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+  assert.equal(png.readUInt32BE(16), 400);
+  assert.equal(png.readUInt32BE(20), 400);
+  const css = await (await fetch(`${origin}/styles.css`)).text();
+  assert.match(css, /\.house-furniture \{[^}]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)[^}]*column-gap: 0/);
+  assert.equal(row.match(/class="picture-art"[\s\S]*?<pre[^>]*>([\s\S]*?)<\/pre>/)[1].split("\n").length, 14);
+  assert.equal(row.match(/class="hearth-surround"[^>]*>([\s\S]*?)<\/pre>/)[1].split("\n").length, 14);
+  assert.ok(row.includes('aria-label="An opening flower and a small unopened bud."'));
+  assert.ok(row.includes("         |   .-.\n         |   \\_/"));
+  assert.match(css, /\.picture-photo \{[^}]*height: 13\.5em;[^}]*object-fit: cover;[^}]*object-position: 75% center/);
   const graph = await (await fetch(`${origin}/graph.js`)).text();
   assert.ok(graph.includes('actions.append(undo, redo, clear)'));
 });
@@ -478,7 +642,7 @@ test("the full About story is a public page, while home ends with a roofed firep
   const garden = await (await fetch(`${origin}/garden.js`)).text();
   assert.ok(garden.includes('".work-section, .links-main, .about-main, .error-main"'));
   const umbrella = await (await fetch(`${origin}/umbrella.js`)).text();
-  assert.ok(umbrella.includes('".play-section, .house-shelter"'));
+  assert.ok(umbrella.includes('".play-section, .house-shelter, .site-header, .site-footer"'));
 });
 
 test("the fireplace companions are ordinary accessible Spotify and email links", async () => {
@@ -490,7 +654,7 @@ test("the fireplace companions are ordinary accessible Spotify and email links",
   assert.ok(row.includes('aria-label="On my turntable: my Spotify profile"'));
   assert.ok(row.includes('href="mailto:nicholasyiofficial@gmail.com"'));
   assert.ok(row.includes('aria-label="Leave a little note: send me an email"'));
-  assert.equal((row.match(/<pre(?: class="record-art")? aria-hidden="true">/g) || []).length, 2);
+  assert.equal((row.match(/<pre class="(?:record-art|mailbox-art)" aria-hidden="true">/g) || []).length, 2);
   assert.ok(row.includes('class="spotify-preview"'));
   assert.ok(!row.includes("?si="));
   assert.ok(html.includes('href="links.html">More work <span aria-hidden="true">&#8594;</span>'));
@@ -607,4 +771,56 @@ test("only public assets are served and unsupported methods are explicit", async
   assert.equal(post.status, 405);
   assert.equal(post.headers.get("allow"), "GET, HEAD");
   assert.equal((await fetch(`${origin}/styles.css?v=1`)).status, 200);
+});
+
+test("case study and field note are native collapsed disclosures on Links, not extra homepage copy", async () => {
+  const html = await (await fetch(`${origin}/links.html`)).text();
+  const stories = [...html.matchAll(/<details class="work-story" id="([^"]+)">([\s\S]*?)<\/details>/g)];
+  assert.deepEqual(stories.map(story => story[1]), ["stashbird-case-study", "evaluation-field-note"]);
+  for (const [, , content] of stories) {
+    assert.match(content, /<summary>[\s\S]*?<strong>[^<]+<\/strong>[\s\S]*?<span>[^<]+<\/span>[\s\S]*?<\/summary>/);
+    assert.ok(content.includes('class="story-copy"'));
+  }
+  assert.ok(html.includes('href="#evaluation-field-note"'));
+  assert.ok(html.includes('href="#stashbird-case-study"'));
+  assert.ok(html.includes('href="https://arxiv.org/html/2609.34242v2"'));
+  assert.ok(html.includes('href="https://arxiv.org/html/2609.34242v2#S3"'));
+  assert.ok(!html.includes("rotation"));
+  assert.ok(html.includes("I co-authored Stashbird."));
+  assert.ok(html.includes("owning evaluation across memory systems and benchmarks"));
+  assert.ok(html.includes("This is a team project; the method below comes from our co-authored paper."));
+  for (const forbidden of ["76.4", "planned organization-wide", "phone number", "5,000"]) assert.ok(!stories.some(story => story[2].includes(forbidden)));
+  const home = await (await fetch(origin)).text();
+  assert.ok(!home.includes("work-story") && !home.includes("Thinking out loud"));
+  assert.ok(!home.includes("When a conversation changes"));
+  const css = await (await fetch(`${origin}/styles.css`)).text();
+  assert.ok(css.includes(".work-story > summary:focus-visible"));
+  assert.ok(css.includes(".story-copy { max-width: 65ch;"));
+});
+
+test("education is a compact accurate About block, never a new homepage section", async () => {
+  const about = await (await fetch(`${origin}/about.html`)).text();
+  const education = about.match(/<p class="about-education">([\s\S]*?)<\/p>/)[1];
+  assert.ok(education.includes('href="https://www.cmu.edu/">Carnegie Mellon University'));
+  assert.ok(education.includes('class="education-years">2021&ndash;2025'));
+  assert.ok(education.includes("B.S. in Computer Science (Artificial Intelligence) &amp; Business Administration"));
+  assert.ok(about.indexOf('class="about-education"') > about.indexOf('class="sidequest-conclusion"'));
+  assert.ok(about.indexOf('class="about-education"') < about.indexOf('class="house-furniture"'));
+  const home = await (await fetch(origin)).text();
+  assert.ok(!home.includes("Carnegie Mellon") && !home.includes("about-education"));
+});
+
+test("reflective writing drops the template headings while retaining evidence and contribution boundaries", async () => {
+  const html = await (await fetch(`${origin}/links.html`)).text();
+  const stories = [...html.matchAll(/<details class="work-story" id="[^"]+">([\s\S]*?)<\/details>/g)].map(match => match[1]);
+  const text = stories.join(" ");
+  assert.ok(text.includes("remember what I said, but also notice when I no longer mean it"));
+  assert.ok(text.includes("what was (or was not) measured"));
+  assert.ok(text.includes("I co-authored Stashbird."));
+  assert.ok(text.includes("owning evaluation across memory systems and benchmarks"));
+  for (const heading of ["The problem", "The design tradeoff", "What the evidence establishes", "Separate the kinds of failure", "Make comparisons inspectable", "Test the promise you actually make"]) {
+    assert.ok(!new RegExp(`<h[34]>${heading}</h[34]>`).test(text));
+  }
+  assert.ok(!text.includes("product rollout") && !text.includes("unpublished result"));
+  assert.ok(!text.includes("Once We Were Us") && !text.includes("Chungking Express"));
 });

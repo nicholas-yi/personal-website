@@ -38,6 +38,20 @@
         </nav>
       </header>
       <main id="main" class="links-main" tabindex="-1">
+        <div class="links-house house-shelter">
+          <div class="house-roof" aria-hidden="true">
+            <pre>                 /\
+               /____\
+             /..:..:..\
+           /____________\
+         /..:..:..:..:..:..\
+       /____________________\
+     /..:..:..:..:..:..:..:..:..\
+   /____________________________\
+ /..:..:..:..:..:..:..:..:..:..:..:..\
++=====================================+</pre>
+          </div>
+          <div class="house-body">
         <h1>Links &amp; little milestones<span class="name-period">.</span></h1>
         <p class="links-intro">Papers, field notes, competition results, and a project about making more voices heard.</p>
         <ul class="social-links" aria-label="Find me online">
@@ -64,6 +78,45 @@
                 <a href="https://arxiv.org/abs/2609.34242">arXiv <span aria-hidden="true">&#8599;</span></a><span aria-hidden="true">/</span>
                 <a href="https://arxiv.org/pdf/2609.34242" aria-label="Stashbird preprint PDF">PDF <span aria-hidden="true">&#8599;</span></a>
               </div>
+              <details class="work-story" id="stashbird-case-study">
+                <summary>
+                  <strong>When a conversation changes</strong>
+                  <span>Notes from Stashbird, on what a memory keeps and what it lets go.</span>
+                </summary>
+                <article class="story-copy" aria-label="Stashbird case study">
+                  <p>I keep coming back to memory because of the expectation underneath it: remember what I said, but also notice when I no longer mean it. A plan gets revised, a preference changes, a detail that once seemed important becomes something I would rather leave behind. The conversation continues. What should the memory do?</p>
+                  <p>There is a difference between remembering an earlier version of something and continuing to treat that version as true. I think that difference becomes especially interesting in a shared conversation, where a fact can have more than one source, and removing one person's message does not necessarily remove every reason to keep it.</p>
+                  <p>Stashbird works with that distinction. Conversation episodes remain connected to the entities and relations derived from them, so a later change can be traced through the memory rather than simply appended beside it.</p>
+
+                  <h4>The part I worked on</h4>
+                  <p>I co-authored Stashbird. My related memory work in Microsoft Teams included co-engineering provenance-aware memory and owning evaluation across memory systems and benchmarks. I used isolated runs, stage-level telemetry, and recovery to distinguish infrastructure failures from model-quality regressions.</p>
+                  <p>That is the less visible part of the work, but an important one. Before a result can tell us anything about memory, we need to understand what happened during ingestion, what retrieval returned, and whether the run actually reached an answer. Otherwise, a failure somewhere along the way can become a conclusion about the model. This is a team project; the method below comes from our co-authored paper.</p>
+
+                  <h4>What survives a correction?</h4>
+                  <p>Suppose two episodes support the same relation. Deleting one should withdraw its contribution, without pretending the other episode never existed. In Stashbird, repeated evidence adds support; a correction supersedes the active relation while keeping its earlier version as history. When the last supporting episode is removed, the unsupported relation leaves both the graph and the search index.</p>
+                  <p>Even then, the structure needs some care. An entity without remaining evidence may still connect surviving neighbors. The published method can retain that connective identity while clearing the metadata derived from the deleted episode. Affected community summaries leave retrieval until they are regenerated. There would be little point in removing something from the graph if a stale summary could quietly bring it back.</p>
+                  <figure class="story-diagram">
+                    <pre data-window-ink aria-hidden="true">source episodes
+      |
+      v
+entities + relations
+      |
+      v
+searchable evidence
+
+source changes
+      |
+      v
+reconcile each view</pre>
+                    <figcaption>A change in the source has to reach what the agent can actually retrieve.</figcaption>
+                  </figure>
+
+                  <p>The paper tests question answering separately from controlled updates and deletions. That separation matters to me: recalling a fact is one question, and knowing whether it should still be available is another.</p>
+                  <p>I am interested in memory that leaves room for a conversation to change, without losing the context that made it meaningful in the first place. Some things still have support. Some things no longer do. The difficult part is knowing which is which.</p>
+                  <p class="story-related">The evaluation side of that question: <a href="#evaluation-field-note">What makes an evaluation trustworthy?</a></p>
+                  <p class="story-sources">Method and published experiments: <a href="https://arxiv.org/html/2609.34242v2">Stashbird, version 2</a>.</p>
+                </article>
+              </details>
             </li>
             <li class="public-link-entry" data-work="graphrag">
               <div class="eyebrow">writing / published <time datetime="2026-04">Apr 2026</time></div>
@@ -80,41 +133,73 @@
             <li class="public-link-entry" id="hateful-memes">
               <div class="eyebrow">Facebook / DrivenData / <time datetime="2020">2020</time></div>
               <h3><a href="https://www.drivendata.org/competitions/70/hateful-memes-phase-2/leaderboard/#leaderRow_151286">Hateful Memes Challenge: Phase 2 <span class="external-arrow" aria-hidden="true">&#8599;</span></a></h3>
-              <p>18th place. A BERT/ViLBERT ensemble for multimodal hate detection.</p>
+              <p>18th place in Phase 2; 3,000+ participants across the challenge. A BERT/ViLBERT ensemble for multimodal hate detection.</p>
               <div class="work-links"><a href="https://www.drivendata.org/competitions/70/hateful-memes-phase-2/leaderboard/#leaderRow_151286" aria-label="Hateful Memes Phase 2 result, nickyi in eighteenth place">nickyi on the leaderboard <span aria-hidden="true">&#8599;</span></a></div>
             </li>
             <li class="public-link-entry" id="kuzushiji">
               <div class="eyebrow">Kaggle / <time datetime="2019">2019</time></div>
               <h3><a href="https://www.kaggle.com/competitions/kuzushiji-recognition/leaderboard">Kuzushiji Recognition <span class="external-arrow" aria-hidden="true">&#8599;</span></a></h3>
-              <p>17th place. Context-aware CenterNet for Japanese handwritten character recognition.</p>
+              <p>17th out of 293 teams. Context-aware CenterNet for logographic &amp; linguistic OCR.</p>
               <div class="work-links"><a href="https://www.kaggle.com/competitions/kuzushiji-recognition/leaderboard" aria-label="Kuzushiji Recognition final leaderboard">final leaderboard <span aria-hidden="true">&#8599;</span></a></div>
-            </li>
-            <li class="public-link-entry">
-              <div class="eyebrow">more experiments</div>
-              <h3><a href="https://www.kaggle.com/nicholasyi/competitions">My Kaggle competitions <span class="external-arrow" aria-hidden="true">&#8599;</span></a></h3>
-              <p>A few earlier detours through machine learning, NLP, and computer vision.</p>
             </li>
           </ol>
         </section>
+        <section class="field-notes" aria-labelledby="field-notes-heading">
+          <div class="section-heading">
+            <h2 id="field-notes-heading">Thinking out loud</h2>
+          </div>
+          <details class="work-story" id="evaluation-field-note">
+            <summary>
+              <strong>What makes an evaluation trustworthy?</strong>
+              <span>On the distance between a reassuring number and a result worth trusting.</span>
+            </summary>
+            <article class="story-copy" aria-label="Evaluation field note">
+              <p>It is easy to want a number to settle a question. Especially a question as open-ended as whether an agent is getting better. A higher score gives the work somewhere to land, something to compare, something that looks like progress.</p>
+              <p>And I do want that comparison. I just want to understand what the number is carrying with it.</p>
+
+              <h3>What actually happened?</h3>
+              <p>An incorrect answer, an unfinished ingestion run, and a judge that never returned a usable grade can all leave an experiment without the result we hoped for. They do not tell the same story. One may reveal a limitation in the system; another may tell us that we have not really tested it yet.</p>
+              <p>Keeping that distinction does not mean making the inconvenient attempts disappear. I want the failed runs to remain visible, with enough evidence to say where they stopped and what was (or was not) measured. There is something misleading about a clean comparison that became clean only after its complications were removed.</p>
+
+              <p>Isolation, stage-level telemetry, and recoverable runs help preserve that context. So do the inputs, the configuration, and an explanation of what was held fixed. If both the system and the setup changed, repeating the experiment will not, on its own, tell us which change mattered.</p>
+
+              <h3>What did the test ask?</h3>
+              <p>Memory makes this especially concrete. An agent can recall a fact correctly and still mishandle a later correction. A deleted source can leave information behind in a searchable summary. Stashbird's public evaluation keeps question answering separate from its update and deletion studies, because the ability to answer does not establish that the underlying state has been revised correctly.</p>
+              <p>I think of a result as a little piece of understanding, with boundaries around it. What did it establish, under which conditions, and what question remains? I would rather leave those boundaries visible than ask a single number to stand in for all of them.</p>
+              <p class="story-related">The memory example: <a href="#stashbird-case-study">When a conversation changes</a>.</p>
+              <p class="story-sources">Example and experimental setup: <a href="https://arxiv.org/html/2609.34242v2#S3">Stashbird's published experiments</a>.</p>
+            </article>
+          </details>
+        </section>
         <p class="more-links"><a href="index.html">&#8592; back to my little corner</a></p>
-      <div class="roofed-hearth house-shelter">
-        <div class="house-roof" aria-hidden="true">
-          <pre>                 /\
-               /____\
-             /..:..:..\
-           /____________\
-         /..:..:..:..:..:..\
-       /____________________\
-     /..:..:..:..:..:..:..:..:..\
-   /____________________________\
- /..:..:..:..:..:..:..:..:..:..:..:..\
-+=====================================+</pre>
-        </div>
-        <div class="house-body">
+        <div class="hearth-companions thinking-hearth">
+          <figure class="thinking-chair" aria-label="A deep, cushioned rocking armchair angled toward the fireplace.">
+            <pre class="thinking-chair-art" aria-hidden="true">  .--------.
+ /   .----. \
+ |\   \    \ \
+ | \   \    \ \
+ |  \   '----' )
+ '-. '--------'
+ (  \.--------'-.
+(  .------------'--'
+ \  \             \
+  \  '-----------. )
+   '---._________.-'
+       / |    / |
+      /  |   /  |
+  \__'___|__'___|___/
+    '---..____..---'</pre>
+            <figcaption>a place to think.</figcaption>
+          </figure>
       <div class="hearth" role="img" aria-label="A small ASCII fireplace with gently flickering flames.">
         <pre class="hearth-surround" aria-hidden="true">  _______________________________
  /_______________________________\
  |  [__] [__] [__] [__] [__] [__] |
+ | [__] [__] [__] [__] [__] [__]  |
+ |  [__] [__] [__] [__] [__] [__] |
+ | [__] [__] [__] [__] [__] [__]  |
+ |  [__] [__] [__] [__] [__] [__] |
+ | [__] [__] [__] [__] [__] [__]  |
  | [__] |                 | [__] |
  | [__] |                 | [__] |
  | [__] |                 | [__] |
@@ -140,6 +225,17 @@
         </div>
         <span class="hearth-caption">a warm place to end up.</span>
       </div>
+          <div class="ponder-corner">
+            <div class="thought-clouds" role="group" aria-label="Questions to ponder">
+              <button class="thought-bubble" type="button" aria-label="What does a better score leave out?" aria-pressed="true" aria-controls="thought-question" data-question="What does a better score leave out?" disabled><span class="thought-wisp"><span class="thought-face">what does a better score leave out?</span></span></button>
+              <button class="thought-bubble" type="button" aria-label="When does remembering become holding on?" aria-pressed="false" aria-controls="thought-question" data-question="When does remembering become holding on?" disabled><span class="thought-wisp"><span class="thought-face">when does remembering become holding on?</span></span></button>
+              <button class="thought-bubble" type="button" aria-label="Can a correction keep its context?" aria-pressed="false" aria-controls="thought-question" data-question="Can a correction keep its context?" disabled><span class="thought-wisp"><span class="thought-face">can a correction keep its context?</span></span></button>
+            </div>
+            <span class="ponder-caption">a few open questions.</span>
+          </div>
+          <p class="thought-question" id="thought-question" role="status">What does a better score leave out?</p>
+          <noscript><ul class="static-questions"><li>When does remembering become holding on?</li><li>Can a correction keep its context?</li></ul></noscript>
+        </div>
         </div>
       </div>
       </main>

@@ -33,8 +33,8 @@ export function installPuddles(doc) {
   let bounds = null;
   let width = 0;
   return {
-    measure() {
-      bounds = container.getBoundingClientRect();
+    measure(measuredBounds) {
+      bounds = measuredBounds || container.getBoundingClientRect();
       const nextWidth = Math.round(bounds.width);
       if (width !== nextWidth) {
         width = nextWidth;

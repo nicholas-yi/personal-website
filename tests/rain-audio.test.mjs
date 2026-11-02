@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { MAX_RAIN_VOICES, RAIN_RECORDINGS, RAIN_PLAYBACK_MULTIPLIER, createRainAudio, createRainPhrase, seamlessRainBuffer } from "../public/rain-audio.js";
+import { MAX_RAIN_VOICES, RAIN_RECORDINGS, RAIN_PLAYBACK_MULTIPLIER, FIREPLACE_RECORDING, MAX_FIREPLACE_MIX, NEAR_RAIN_MIX, fireplaceProximity, fireplaceMix, createRainAudio, createRainPhrase, seamlessRainBuffer } from "../public/rain-audio.js";
 
 function randomSeed() {
   let seed = 42;
@@ -109,14 +109,14 @@ test("natural rain playback is exactly 25 percent slower, with a quieter leaf la
   }
 });
 
-test("audio is silent before activation, then loops two stereo field recordings without synthesized rain drops", async () => {
+test("audio is silent before activation, then loops three stereo field recordings without synthesized rain drops", async () => {
   const { audio, context, timers } = setup();
   assert.equal(context.state, "suspended");
   assert.equal(context.nodes.filter((node) => node.kind === "oscillator").length, 0);
   assert.equal(timers.size, 0);
   await audio.play();
   assert.equal(context.state, "running");
-  assert.equal(context.nodes.filter((node) => node.kind === "source" && node.loop).length, 2);
+  assert.equal(context.nodes.filter((node) => node.kind === "source" && node.loop).length, 3);
   const drips = context.nodes.filter((node) => node.kind === "oscillator");
   assert.equal(drips.length, 0);
   const loops = context.nodes.filter((node) => node.kind === "source" && node.loop);
@@ -155,8 +155,8 @@ test("recordings are fetched once per audio instance and repeated activation can
   assert.equal(requested.length, 0);
   await Promise.all([audio.play(), audio.play()]);
   await audio.play();
-  assert.deepEqual(requested, [...RAIN_RECORDINGS]);
-  assert.equal(context.nodes.filter((node) => node.loop).length, 2);
+  assert.deepEqual(requested, [...RAIN_RECORDINGS, FIREPLACE_RECORDING]);
+  assert.equal(context.nodes.filter((node) => node.loop).length, 3);
 });
 
 test("failed recordings are explicit, suspended, retryable, and never replaced with white noise", async () => {
@@ -164,13 +164,78 @@ test("failed recordings are explicit, suspended, retryable, and never replaced w
   const { audio, context } = setup({ fetch: async () => ({
     ok: !fails, status: 404, arrayBuffer: async () => new ArrayBuffer(8),
   }) });
-  await assert.rejects(audio.play(), /Couldn't load the rain recording \(404\)/);
+  await assert.rejects(audio.play(), /Couldn't load the sound recording \(404\)/);
   assert.equal(context.state, "suspended");
   assert.equal(context.nodes.filter((node) => node.loop).length, 0);
   fails = false;
   await audio.play();
   assert.equal(context.state, "running");
-  assert.equal(context.nodes.filter((node) => node.loop).length, 2);
+  assert.equal(context.nodes.filter((node) => node.loop).length, 3);
+});
+
+test("fireplace proximity is viewport-based, fades at the edges, and increases toward the hearth", () => {
+  assert.equal(fireplaceProximity({ top: 2000, bottom: 2100 }, 1000), 0);
+  assert.equal(fireplaceProximity({ top: -200, bottom: -100 }, 1000), 0);
+  assert.equal(fireplaceProximity({ top: 600, bottom: 700 }, 1000), 1);
+  const entering = fireplaceProximity({ top: 950, bottom: 1050 }, 1000);
+  const nearer = fireplaceProximity({ top: 800, bottom: 900 }, 1000);
+  assert.ok(entering > 0 && entering < nearer && nearer < 1);
+  for (let top = -300; top <= 2000; top += 20) {
+    const value = fireplaceProximity({ top, bottom: top + 100 }, 1000);
+    assert.ok(value >= 0 && value <= 1);
+  }
+  assert.throws(() => fireplaceProximity(null, 1000), TypeError);
+  assert.throws(() => fireplaceProximity({ top: 1, bottom: 0 }, 1000), TypeError);
+  assert.throws(() => fireplaceProximity({ top: 0, bottom: 100 }, 0), TypeError);
+});
+
+test("fire crackling rises as rain recedes and cannot bypass mute or create extra loops/timers", async () => {
+  const { audio, context, timers, advance } = setup();
+  assert.deepEqual(fireplaceMix(0), { rain: 1, fire: 0 });
+  assert.equal(MAX_FIREPLACE_MIX, 0.65 * 1.35 * 1.25);
+  assert.equal(NEAR_RAIN_MIX, 0.3 * 0.75);
+  assert.deepEqual(fireplaceMix(1), { rain: NEAR_RAIN_MIX, fire: MAX_FIREPLACE_MIX });
+  assert.deepEqual(fireplaceMix(-10), fireplaceMix(0));
+  assert.deepEqual(fireplaceMix(10), fireplaceMix(1));
+  assert.throws(() => fireplaceMix(NaN), TypeError);
+  audio.fireplace(1);
+  await audio.play();
+  const gains = context.nodes.filter(node => node.kind === "gain");
+  assert.equal(gains[1].gain.value, fireplaceMix(1).rain);
+  assert.equal(gains[2].gain.value, fireplaceMix(1).fire);
+  const sources = context.nodes.filter(node => node.loop);
+  assert.equal(sources.length, 3);
+  assert.equal(sources[2].playbackRate.value, 1);
+  audio.fireplace(0);
+  assert.equal(gains[1].gain.value, 1);
+  assert.equal(gains[2].gain.value, 0);
+  assert.equal(timers.size, 1);
+  const pause = audio.pause();
+  audio.fireplace(1);
+  assert.equal(gains[0].gain.value, 0);
+  await advance(160);
+  await pause;
+  assert.equal(context.state, "suspended");
+  assert.equal(timers.size, 0);
+  await audio.play();
+  assert.equal(gains[2].gain.value, MAX_FIREPLACE_MIX);
+  assert.equal(context.nodes.filter(node => node.loop).length, 3);
+});
+
+test("the page-end mix reaches the requested rain/fire targets regardless of viewport placement", () => {
+  for (const height of [390, 600, 900, 1200]) {
+    for (const top of [-300, 50, 300, 1500]) {
+      const bottom = fireplaceProximity({ top, bottom: top + 100 }, height, 0);
+      assert.equal(bottom, 1);
+      const mix = fireplaceMix(bottom);
+      assert.equal(mix.rain, NEAR_RAIN_MIX);
+      assert.equal(mix.fire, MAX_FIREPLACE_MIX);
+    }
+  }
+  assert.equal(fireplaceProximity({ top: 2000, bottom: 2100 }, 900, 900), 0);
+  assert.equal(fireplaceProximity({ top: 2000, bottom: 2100 }, 900, 225), 0.5);
+  assert.throws(() => fireplaceProximity({ top: 0, bottom: 100 }, 900, -1), TypeError);
+  assert.throws(() => fireplaceProximity({ top: 0, bottom: 100 }, 900, NaN), TypeError);
 });
 
 test("decode failure is explicit and suspends the context instead of playing an incomplete layer", async () => {

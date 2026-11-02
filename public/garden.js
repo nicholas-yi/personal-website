@@ -1,11 +1,14 @@
 import { GRID_X, GRID_Y, RAIN_INK, addRipple, createRain, moveShelter, indexText, overlapsIndexedText, rainOpacity, resizeRain, stepRain } from "./rain.js";
-import { createRainAudio } from "./rain-audio.js";
+import { createRainAudio, fireplaceProximity } from "./rain-audio.js";
 import { installInteractionSounds } from "./interaction-sounds.js";
 import { installUmbrella } from "./umbrella.js";
 import { decorateHouse } from "./house.js";
 import { installListening } from "./listening.js";
 import { installHearth } from "./hearth.js";
 import { installPuddles } from "./puddles.js";
+import { installThoughts } from "./thoughts.js";
+import { createRainGlyphs } from "./rain-glyphs.js";
+import { installMailbox } from "./mailbox.js";
 
 const canvas = document.querySelector("#garden");
 const context = canvas.getContext("2d");
@@ -16,6 +19,7 @@ const soundButton = document.querySelector("#sound-toggle");
 const soundLabel = document.querySelector("#sound-label");
 const status = document.querySelector("#garden-status");
 const hint = document.querySelector("#garden-hint");
+const graphActivity = document.querySelector("[data-graph-playground]");
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 const rain = createRain(document.documentElement.clientWidth, innerHeight);
 const puddles = installPuddles(document);
@@ -55,39 +59,67 @@ let textIndex;
 let readingArea;
 let windowPane;
 let textNeedsUpdate = true;
+let layoutNeedsUpdate = true;
+let sceneGeometry;
+let rainGlyphs;
 let audio;
 let soundEnabled = true;
 let soundAwaitingGesture = true;
 let soundRequest = 0;
+let fireplaceAmount = 0;
 let touchFadeTimer;
+let graphHovered = false;
 
 function measureText() {
-  protectedText = [];
-  for (const element of document.querySelectorAll("h1, h2, h3, h4, p, dt, dd, a, .eyebrow, .work-links, .garden-controls, .about-garden, [data-window-ink], .window-caption")) {
-    const range = document.createRange();
-    range.selectNodeContents(element);
-    protectedText.push(...Array.from(range.getClientRects()));
+  const documentRect = (rect) => rect && ({
+    left: rect.left + scrollX, right: rect.right + scrollX,
+    top: rect.top + scrollY, bottom: rect.bottom + scrollY,
+    width: rect.width, height: rect.height,
+  });
+  const viewportRect = (rect) => rect && ({
+    ...rect, left: rect.left - scrollX, right: rect.right - scrollX,
+    top: rect.top - scrollY, bottom: rect.bottom - scrollY,
+  });
+  if (layoutNeedsUpdate) {
+    const rectangles = [];
+    for (const element of document.querySelectorAll("h1, h2, h3, h4, p, dt, dd, a, .eyebrow, .work-links, .about-garden, [data-window-ink], .window-caption")) {
+      if (element.closest(".house-body, .work-art, [data-graph-playground], .site-header, .garden-controls")) continue;
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      rectangles.push(...Array.from(range.getClientRects(), documentRect));
+    }
+    for (const element of document.querySelectorAll(".work-art, .house-body, .hearth, [data-graph-playground]")) {
+      rectangles.push(documentRect(element.getBoundingClientRect()));
+    }
+    const measure = (selector) => documentRect(document.querySelector(selector)?.getBoundingClientRect());
+    sceneGeometry = {
+      rectangles, column: measure(".work-section, .links-main, .about-main, .error-main"),
+      pane: measure(".rain-pane"), roof: measure(".house-roof"), body: measure(".house-body"),
+      water: measure(".page-puddles"), fireplace: measure(".hearth"),
+    };
+    layoutNeedsUpdate = false;
   }
-  const column = document.querySelector(".work-section, .links-main, .about-main, .error-main").getBoundingClientRect();
+  protectedText = sceneGeometry.rectangles.map(viewportRect);
+  for (const selector of [".site-header", ".garden-controls"]) {
+    protectedText.push(document.querySelector(selector).getBoundingClientRect());
+  }
+  const listeningCard = document.querySelector(".listening-card");
+  if (listeningCard && !listeningCard.hidden) protectedText.push(listeningCard.getBoundingClientRect());
+  const column = viewportRect(sceneGeometry.column);
   readingArea = {
     left: column.left - 6,
     right: column.right + 6,
     top: 0,
     bottom: innerHeight,
   };
-  const pane = document.querySelector(".rain-pane");
-  windowPane = pane?.getClientRects().length ? pane.getBoundingClientRect() : undefined;
-  const roof = document.querySelector(".house-roof");
-  rain.house = roof ? {
-    roof: roof.getBoundingClientRect(),
-    body: document.querySelector(".house-body").getBoundingClientRect(),
-  } : null;
-  for (const element of document.querySelectorAll(".work-art, .house-body, .hearth, [data-graph-playground]")) {
-    protectedText.push(element.getBoundingClientRect());
-  }
+  windowPane = viewportRect(sceneGeometry.pane);
+  rain.house = sceneGeometry.roof ? { roof: viewportRect(sceneGeometry.roof), body: viewportRect(sceneGeometry.body) } : null;
   textIndex = indexText(rain.width, rain.height, protectedText);
-  const water = puddles.measure();
+  const water = puddles.measure(viewportRect(sceneGeometry.water));
   rain.groundY = water && water.top < innerHeight ? water.top + 55 : rain.height + 16;
+  const fireplace = viewportRect(sceneGeometry.fireplace);
+  fireplaceAmount = fireplaceProximity(fireplace, innerHeight, Math.max(0, document.documentElement.scrollHeight - innerHeight - scrollY));
+  audio?.fireplace(fireplaceAmount);
   textNeedsUpdate = false;
 }
 
@@ -97,15 +129,17 @@ function resize() {
   canvas.width = Math.round(width * scale);
   canvas.height = Math.round(innerHeight * scale);
   context?.setTransform(scale, 0, 0, scale, 0, 0);
+  if (context) rainGlyphs = createRainGlyphs(document, scale);
   resizeRain(rain, width, innerHeight);
   textNeedsUpdate = true;
+  layoutNeedsUpdate = true;
   if (!motionEnabled) render();
 }
 
 function glyph(text, x, y, opacity) {
   if (opacity < 0.005 || overlapsIndexedText(textIndex, x, y)) return;
   context.globalAlpha = opacity;
-  context.fillText(text, x, y);
+  rainGlyphs.draw(context, text, x, y);
 }
 
 function render() {
@@ -147,7 +181,7 @@ function draw(now) {
   lastTime = now;
   nextFrameAt = now + 1000 / 24;
   render();
-  if (soundEnabled) audio?.shelter(rain.shelter.strength);
+  applyAudioShelter();
 }
 
 function startFrames() {
@@ -160,6 +194,18 @@ function startFrames() {
 function releaseShelter() {
   clearTimeout(touchFadeTimer);
   rain.pointer.active = false;
+}
+
+function applyAudioShelter() {
+  if (!soundEnabled) return;
+  const graphSheltered = graphHovered || graphActivity?.contains(document.activeElement);
+  audio?.shelter(graphSheltered ? 1 : motionEnabled ? rain.shelter.strength : 0);
+}
+
+function releaseInteractionShelter() {
+  graphHovered = false;
+  releaseShelter();
+  applyAudioShelter();
 }
 
 function setMotion(enabled) {
@@ -178,7 +224,7 @@ function setMotion(enabled) {
   if (!motionEnabled) {
     releaseShelter();
     rain.shelter.strength = 0;
-    audio?.shelter(0);
+    applyAudioShelter();
   }
   textNeedsUpdate = true;
   startFrames();
@@ -200,10 +246,12 @@ async function setSound(enabled, feedback = false) {
   try {
     if (enabled) {
       audio ??= createRainAudio();
+      audio.fireplace(fireplaceAmount);
+      applyAudioShelter();
       await audio.play();
       if (request !== soundRequest) return;
       stopWaitingForSound();
-      audio.shelter(motionEnabled ? rain.shelter.strength : 0);
+      applyAudioShelter();
       if (document.hidden) await audio.pause();
       else if (feedback) audio.effect("sound-on");
     } else if (audio) {
@@ -259,22 +307,46 @@ window.addEventListener("scroll", () => {
   textNeedsUpdate = true;
   if (!motionEnabled) render();
 }, { passive: true });
-new ResizeObserver(() => {
+const layoutObserver = new ResizeObserver((entries) => {
+  if (entries.some(entry => entry.target.matches(".page"))) layoutNeedsUpdate = true;
   textNeedsUpdate = true;
   if (!motionEnabled) render();
-}).observe(document.querySelector(".page"));
+});
+for (const element of document.querySelectorAll(".page, .listening-card")) layoutObserver.observe(element);
+document.addEventListener("load", () => { layoutNeedsUpdate = true; textNeedsUpdate = true; }, true);
+document.fonts?.ready.then(() => { layoutNeedsUpdate = true; textNeedsUpdate = true; if (!motionEnabled) render(); });
 
 window.addEventListener("pointermove", (event) => {
-  if (event.pointerType === "touch" || !motionEnabled) return;
+  if (event.pointerType === "touch") return;
   if (event.target.closest("[data-graph-playground]")) {
+    const entered = !graphHovered;
+    graphHovered = true;
     releaseShelter();
+    if (entered) applyAudioShelter();
     return;
   }
+  if (graphHovered) {
+    graphHovered = false;
+    applyAudioShelter();
+  }
+  if (!motionEnabled) return;
   clearTimeout(touchFadeTimer);
   moveShelter(rain, event.clientX, event.clientY);
 }, { passive: true });
-document.documentElement.addEventListener("pointerleave", releaseShelter);
-window.addEventListener("blur", releaseShelter);
+graphActivity?.addEventListener("pointerenter", (event) => {
+  if (event.pointerType === "touch") return;
+  graphHovered = true;
+  releaseShelter();
+  applyAudioShelter();
+});
+graphActivity?.addEventListener("pointerleave", () => {
+  graphHovered = false;
+  applyAudioShelter();
+});
+graphActivity?.addEventListener("focusin", applyAudioShelter);
+graphActivity?.addEventListener("focusout", () => queueMicrotask(applyAudioShelter));
+document.documentElement.addEventListener("pointerleave", releaseInteractionShelter);
+window.addEventListener("blur", releaseInteractionShelter);
 window.addEventListener("pointerdown", (event) => {
   if (!motionEnabled || event.button !== 0 || event.target.closest("a, button, input, select, textarea, [data-graph-playground]")) return;
   clearTimeout(touchFadeTimer);
@@ -284,10 +356,10 @@ window.addEventListener("pointerdown", (event) => {
 window.addEventListener("pointerup", (event) => {
   if (event.pointerType === "touch") touchFadeTimer = setTimeout(releaseShelter, 2400);
 }, { passive: true });
-window.addEventListener("pointercancel", releaseShelter);
+window.addEventListener("pointercancel", releaseInteractionShelter);
 
 document.addEventListener("visibilitychange", async () => {
-  releaseShelter();
+  releaseInteractionShelter();
   startFrames();
   if (!soundEnabled || !audio) return;
   if (document.hidden) {
@@ -304,6 +376,8 @@ document.addEventListener("visibilitychange", async () => {
 
 controls.hidden = false;
 installListening(document);
+installThoughts(document);
+installMailbox(document);
 installHearth(document);
 if (context) decorateHouse(document);
 if (!context) {

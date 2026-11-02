@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { UMBRELLA_COLUMNS, UMBRELLA_FRAMES, createUmbrella, stepUmbrella, toggleUmbrella, umbrellaArt, umbrellaCanopy, umbrellaOccluded } from "../public/umbrella.js";
+import { UMBRELLA_COLUMNS, UMBRELLA_FRAMES, UMBRELLA_REPLACE_DISTANCE, createUmbrella, stepUmbrella, toggleUmbrella, activateUmbrella, moveUmbrella, umbrellaArt, umbrellaCanopy, umbrellaOccluded } from "../public/umbrella.js";
 import { createRain, rainOpacity, stepRain, umbrellaRoofY, underUmbrella } from "../public/rain.js";
 
 test("a click opens a bounded ASCII umbrella and a second closes it in place", () => {
@@ -147,6 +147,42 @@ test("every umbrella frame keeps a straight centered shaft and a connected curve
   }
 });
 
+test("nearby activation folds in place while a click more than 120 pixels away replaces the umbrella", () => {
+  assert.equal(UMBRELLA_REPLACE_DISTANCE, 120);
+  const umbrella = createUmbrella();
+  activateUmbrella(umbrella, 200, 300, 800, 2000, true);
+  assert.equal(umbrella.open, true);
+  activateUmbrella(umbrella, 220, 320, 800, 2000, true);
+  assert.equal(umbrella.open, false);
+  assert.equal(umbrella.x, 200);
+  assert.equal(umbrella.y, 300);
+  activateUmbrella(umbrella, 200, 300, 800, 2000, true);
+  activateUmbrella(umbrella, 321, 300, 800, 2000);
+  assert.equal(umbrella.open, true);
+  assert.equal(umbrella.x, 321);
+  assert.equal(umbrella.progress, 0);
+  for (let i = 0; i < 20; i++) stepUmbrella(umbrella, 1 / 60);
+  assert.equal(umbrella.progress, 1);
+  activateUmbrella(umbrella, 441, 300, 800, 2000, true);
+  assert.equal(umbrella.open, false);
+  assert.equal(umbrella.x, 321);
+});
+
+test("moving open or folded umbrellas preserves animation/state and clamps only their document coordinates", () => {
+  for (const open of [true, false]) {
+    const umbrella = { ...createUmbrella(), open, placed: true, progress: Number(open), x: 100, y: 300 };
+    moveUmbrella(umbrella, 450, 1600, 800, 2000);
+    assert.equal(umbrella.open, open);
+    assert.equal(umbrella.progress, Number(open));
+    assert.equal(umbrella.x, 450);
+    assert.equal(umbrella.y, 1600);
+    moveUmbrella(umbrella, -10, 9000, 800, 2000);
+    assert.equal(umbrella.x, 66);
+    assert.equal(umbrella.y, 1935);
+    assert.throws(() => moveUmbrella(umbrella, NaN, 100, 800, 2000), TypeError);
+    assert.throws(() => activateUmbrella(umbrella, 100, 100, 0, 2000), TypeError);
+  }
+});
 test("the graph and house take precedence even when a reflow moves them over the anchored umbrella", () => {
   const umbrella = { left: 100, right: 220, top: 300, bottom: 400 };
   assert.equal(umbrellaOccluded(umbrella, [{ left: 300, right: 800, top: 250, bottom: 700 }]), false);

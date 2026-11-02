@@ -205,9 +205,11 @@ export function stepRain(scene, elapsed) {
     drop.y += drop.vy * dt;
     if (drop.x < 0) drop.x = scene.width;
     if (drop.x > scene.width) drop.x = 0;
-    const collision = roofs.map((roof) => ({ roof, y: roof.height(roof.rect, drop.x) }))
-      .filter((hit) => hit.y !== null && previousY < hit.y && drop.y >= hit.y)
-      .sort((a, b) => a.y - b.y)[0];
+    let collision = null;
+    for (const roof of roofs) {
+      const y = roof.height(roof.rect, drop.x);
+      if (y !== null && previousY < y && drop.y >= y && (!collision || y < collision.y)) collision = { roof, y };
+    }
     if (collision) {
       const roof = collision.roof.rect;
       drop.onRoof = true;

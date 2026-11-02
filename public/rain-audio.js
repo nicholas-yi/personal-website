@@ -1,6 +1,28 @@
 export const MAX_RAIN_VOICES = 24;
 export const RAIN_RECORDINGS = Object.freeze(["/audio/garden-rain.mp3", "/audio/forest-rain.mp3"]);
 export const RAIN_PLAYBACK_MULTIPLIER = 0.75;
+export const FIREPLACE_RECORDING = "/audio/fireplace.mp3";
+export const MAX_FIREPLACE_MIX = 0.65 * 1.35 * 1.25;
+export const NEAR_RAIN_MIX = 0.3 * 0.75;
+
+export function fireplaceProximity(rect, viewportHeight, remainingScroll) {
+  if (!rect || ![rect.top, rect.bottom, viewportHeight].every(Number.isFinite) || viewportHeight <= 0 || rect.bottom <= rect.top) {
+    throw new TypeError("Fireplace proximity needs finite bounds and a positive viewport height.");
+  }
+  const visible = Math.max(0, Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0)) / (rect.bottom - rect.top);
+  const distance = Math.abs((rect.top + rect.bottom) / 2 - viewportHeight * 0.65);
+  if (remainingScroll !== undefined && (!Number.isFinite(remainingScroll) || remainingScroll < 0)) {
+    throw new TypeError("Page-end proximity needs a finite nonnegative scroll distance.");
+  }
+  const pageEnd = remainingScroll === undefined ? 0 : Math.max(0, 1 - remainingScroll / (viewportHeight * 0.5));
+  return Math.max(pageEnd, visible * Math.max(0, 1 - distance / (viewportHeight * 0.65)));
+}
+
+export function fireplaceMix(amount) {
+  if (!Number.isFinite(amount)) throw new TypeError("Fireplace mix needs a finite proximity.");
+  const proximity = Math.max(0, Math.min(1, amount));
+  return { rain: NEAR_RAIN_MIX + (1 - proximity) * (1 - NEAR_RAIN_MIX), fire: proximity * MAX_FIREPLACE_MIX };
+}
 
 export function createRainPhrase(random = Math.random) {
   return {
@@ -47,6 +69,12 @@ export function createRainAudio({
   shelterFilter.frequency.value = 4800;
   master.gain.value = 0;
   shelterFilter.connect(master).connect(context.destination);
+  const rainMix = context.createGain();
+  const fireMix = context.createGain();
+  rainMix.gain.value = 1;
+  fireMix.gain.value = 0;
+  rainMix.connect(shelterFilter);
+  fireMix.connect(master);
 
   function makeNoise(seconds) {
     const buffer = context.createBuffer(1, Math.ceil(context.sampleRate * seconds), context.sampleRate);
@@ -56,7 +84,7 @@ export function createRainAudio({
   }
 
   const bodyNoise = makeNoise(8.3);
-  function layer(buffer, frequency, rate) {
+  function layer(buffer, frequency, rate, output = rainMix) {
     const source = context.createBufferSource();
     const filter = context.createBiquadFilter();
     const gain = context.createGain();
@@ -67,7 +95,7 @@ export function createRainAudio({
     filter.Q.value = 0.4;
     gain.gain.value = 0;
     source.playbackRate.value = rate;
-    source.connect(filter).connect(gain).connect(shelterFilter);
+    source.connect(filter).connect(gain).connect(output);
     source.start(0, random() * buffer.duration);
     return { source, filter, gain };
   }
@@ -75,12 +103,16 @@ export function createRainAudio({
   let loading = null;
   function loadRecordings() {
     if (layers) return Promise.resolve();
-    loading ??= Promise.all(RAIN_RECORDINGS.map(async (url) => {
+    loading ??= Promise.all([...RAIN_RECORDINGS, FIREPLACE_RECORDING].map(async (url) => {
       const response = await request(url, { signal: AbortSignal.timeout(20000), credentials: "omit" });
-      if (!response.ok) throw new Error(`Couldn't load the rain recording (${response.status}). Try the sound button again.`);
+      if (!response.ok) throw new Error(`Couldn't load the sound recording (${response.status}). Try the sound button again.`);
       return seamlessRainBuffer(context, await context.decodeAudioData(await response.arrayBuffer()));
-    })).then(([garden, forest]) => {
-      layers = [layer(garden, 4200, 1.18 * RAIN_PLAYBACK_MULTIPLIER), layer(forest, 3700, 1.28 * RAIN_PLAYBACK_MULTIPLIER)];
+    })).then(([garden, forest, fireplace]) => {
+      const body = layer(garden, 4200, 1.18 * RAIN_PLAYBACK_MULTIPLIER);
+      const patter = layer(forest, 3700, 1.28 * RAIN_PLAYBACK_MULTIPLIER);
+      const fire = layer(fireplace, 3500, 1, fireMix);
+      fire.gain.gain.value = 0.7;
+      layers = [body, patter, fire];
     }).finally(() => { loading = null; });
     return loading;
   }
@@ -90,6 +122,8 @@ export function createRainAudio({
   let action = 0;
   let shelterAmount = 0;
   let appliedShelter = -1;
+  let fireplaceAmount = 0;
+  let appliedFireplace = -1;
   let recentEffects = [];
   const lastEffect = new Map();
   let lastEffectAt = -Infinity;
@@ -174,11 +208,15 @@ export function createRainAudio({
   }
 
   function applyShelter() {
-    if (!playing || Math.abs(shelterAmount - appliedShelter) < 0.04) return;
+    if (!playing || Math.abs(shelterAmount - appliedShelter) < 0.04 && Math.abs(fireplaceAmount - appliedFireplace) < 0.02) return;
     appliedShelter = shelterAmount;
+    appliedFireplace = fireplaceAmount;
     shelterFilter.frequency.setTargetAtTime(4800 - shelterAmount * 2600, context.currentTime, 0.3);
     master.gain.cancelScheduledValues(context.currentTime);
     master.gain.setTargetAtTime(0.62 * (1 - shelterAmount * 0.25), context.currentTime, 0.3);
+    const mix = fireplaceMix(fireplaceAmount);
+    rainMix.gain.setTargetAtTime(mix.rain, context.currentTime, 0.4);
+    fireMix.gain.setTargetAtTime(mix.fire, context.currentTime, 0.4);
   }
 
   return {
@@ -191,7 +229,7 @@ export function createRainAudio({
         playing = false;
         clearPhrase();
         await context.suspend();
-        throw new Error(`Couldn't start natural rain: ${error.message}`);
+        throw new Error(`Couldn't start the soundscape: ${error.message}`);
       }
       if (currentAction !== action) return;
       if (context.state !== "running") throw new Error("Your browser paused the audio. Try the sound button again.");
@@ -202,6 +240,7 @@ export function createRainAudio({
       lastEffect.clear();
       lastEffectAt = -Infinity;
       appliedShelter = -1;
+      appliedFireplace = -1;
       applyShelter();
       schedulePhrase(true);
     },
@@ -219,6 +258,11 @@ export function createRainAudio({
     },
     shelter(amount) {
       shelterAmount = Math.max(0, Math.min(1, amount));
+      applyShelter();
+    },
+    fireplace(amount) {
+      fireplaceMix(amount);
+      fireplaceAmount = Math.max(0, Math.min(1, amount));
       applyShelter();
     },
     effect(kind) {
