@@ -63,8 +63,7 @@ let layoutNeedsUpdate = true;
 let sceneGeometry;
 let rainGlyphs;
 let audio;
-let soundEnabled = true;
-let soundAwaitingGesture = true;
+let soundEnabled = false;
 let soundRequest = 0;
 let fireplaceAmount = 0;
 let touchFadeTimer;
@@ -250,7 +249,6 @@ async function setSound(enabled, feedback = false) {
       applyAudioShelter();
       await audio.play();
       if (request !== soundRequest) return;
-      stopWaitingForSound();
       applyAudioShelter();
       if (document.hidden) await audio.pause();
       else if (feedback) audio.effect("sound-on");
@@ -260,7 +258,6 @@ async function setSound(enabled, feedback = false) {
     }
     if (request !== soundRequest) return;
     soundEnabled = enabled;
-    if (!enabled) stopWaitingForSound();
     soundButton.setAttribute("aria-pressed", String(enabled));
     labelSound(enabled);
     status.textContent = "";
@@ -268,28 +265,13 @@ async function setSound(enabled, feedback = false) {
     if (request !== soundRequest) return;
     console.error("Rain soundscape:", error);
     if (enabled) soundEnabled = false;
-    stopWaitingForSound();
     soundButton.setAttribute("aria-pressed", String(soundEnabled));
     labelSound(soundEnabled);
     status.textContent = error instanceof Error ? error.message : "The rain soundscape couldn't start. Please try again.";
   }
 }
 
-function stopWaitingForSound() {
-  soundAwaitingGesture = false;
-  document.removeEventListener("pointerdown", startDefaultSound, true);
-  document.removeEventListener("keydown", startDefaultSound, true);
-}
-function startDefaultSound(event) {
-  if (!event.isTrusted || !soundEnabled || !soundAwaitingGesture || document.hidden ||
-      event.target.closest("#sound-toggle") || event.type === "pointerdown" && (event.button !== 0 || event.isPrimary === false) ||
-      event.type === "keydown" && !["Enter", " "].includes(event.key)) return;
-  stopWaitingForSound();
-  setSound(true);
-}
-soundButton.title = "Sound is enabled and starts with your first click or Enter/Space action.";
-document.addEventListener("pointerdown", startDefaultSound, true);
-document.addEventListener("keydown", startDefaultSound, true);
+labelSound(soundEnabled);
 motionButton.addEventListener("click", () => setMotion(!motionEnabled));
 soundButton.addEventListener("click", () => setSound(!soundEnabled, true));
 function playInteraction(kind) {

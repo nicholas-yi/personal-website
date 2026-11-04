@@ -13,7 +13,7 @@ const assets = new Map([
   ["/404", ["404.html", "text/html; charset=utf-8"]],
   ["/404.html", ["404.html", "text/html; charset=utf-8"]],
   ["/social-card.png", ["social-card.png", "image/png"]],
-  ["/about-photo.png", ["about-photo.png", "image/png"]],
+  ["/about-photo.jpg", ["about-photo.jpg", "image/jpeg"]],
   ["/styles.css", ["styles.css", "text/css; charset=utf-8"]],
   ["/garden.js", ["garden.js", "text/javascript; charset=utf-8"]],
   ["/listening.js", ["listening.js", "text/javascript; charset=utf-8"]],
