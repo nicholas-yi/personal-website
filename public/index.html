@@ -21,8 +21,10 @@
     <meta name="twitter:image" content="https://nicholasyi.me/social-card.png">
     <meta name="twitter:image:alt" content="Nicholas Yi. Building things that learn, remember, and work. An ASCII house shelters a small fireplace.">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23f8f7f2'/%3E%3Ctext x='32' y='47' text-anchor='middle' font-family='monospace' font-size='54' fill='%235b6844'%3E*%3C/text%3E%3C/svg%3E">
+    <script src="theme.js"></script>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="graph.css">
+    <link rel="stylesheet" href="theme.css">
     <script type="module" src="garden.js"></script>
     <script type="module" src="graph.js"></script>
   </head>
@@ -326,6 +328,7 @@
         </div>
         <span class="hearth-caption">a warm place to end up.</span>
       </div>
+            <div class="mail-corner">
             <a class="hearth-object mailbox" href="mailto:nicholasyiofficial@gmail.com" aria-label="Leave a little note: send me an email">
               <span class="winged-mail" aria-hidden="true"><i>\</i>[=]<i>/</i></span>
               <span class="winged-mail mail-late" aria-hidden="true"><i>\</i>[=]<i>/</i></span>
@@ -337,6 +340,11 @@
       __||__</pre>
               <span>leave a little note <span aria-hidden="true">&#8599;</span></span>
             </a>
+            <div class="copy-tools mail-tools">
+              <button class="copy-action" type="button" data-copy-email aria-label="Copy email address" hidden>copy address</button>
+              <span class="copy-status" role="status" aria-live="polite" aria-atomic="true"></span>
+            </div>
+            </div>
           </div>
           </div>
         </section>
@@ -351,7 +359,11 @@
     <div class="page-puddles" aria-hidden="true"><pre>   .:~:..             ..:~:.
  .:~~~~~:.          .:~~~~~:.
    ':::'              ':::'</pre><canvas></canvas></div>
-    <aside class="garden-controls" aria-label="Rain settings" hidden>
+    <aside class="garden-controls" aria-label="Atmosphere settings" hidden>
+      <button id="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to lamplight" title="Switch to lamplight" hidden>
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" aria-hidden="true"><g class="theme-lamp"><path d="M7 3h6l3 8H4l3-8Zm3 8v6m-4 0h8M5 13l-1 2m11-2 1 2"/></g><g class="theme-daylight"><circle cx="10" cy="10" r="3"/><path d="M10 1v2m0 14v2M1 10h2m14 0h2M3.6 3.6 5 5m10 10 1.4 1.4M3.6 16.4 5 15M15 5l1.4-1.4"/></g></svg>
+      </button>
+      <span class="control-divider" aria-hidden="true"></span>
       <button id="motion-toggle" type="button" aria-pressed="false" aria-label="Enable rain animation" title="Enable rain animation">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" aria-hidden="true"><path d="M5 10a3 3 0 1 1 1-5 4 4 0 0 1 8 1 2.5 2.5 0 0 1 1 5H5m1 2-1 3m5-3-1 4m5-4-1 3"/><path class="control-off" d="m3 3 14 14"/></svg><span id="motion-label" class="sr-only">rain paused</span>
       </button>

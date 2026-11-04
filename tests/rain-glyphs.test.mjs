@@ -25,3 +25,9 @@ test("the rain atlas renders each glyph once, then uses image blits for every dr
 test("missing canvas support is explicit rather than a silent missing rain layer", () => {
   assert.throws(() => createRainGlyphs({ createElement: () => ({ getContext: () => null }) }, 1), /canvas support/);
 });
+
+test("the atlas accepts a palette ink without changing glyph coverage or adding per-drop color work", () => {
+  const context = { setTransform() {}, fillText() {} };
+  createRainGlyphs({ createElement: () => ({ getContext: () => context }) }, 1, "#b8b39c");
+  assert.equal(context.fillStyle, "#b8b39c");
+});

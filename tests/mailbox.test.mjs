@@ -8,7 +8,7 @@ function fixture() {
   const scene = { dataset: { motion: "moving" } };
   const mailbox = new EventTarget();
   mailbox.dataset = {};
-  mailbox.closest = () => scene;
+  mailbox.closest = selector => selector === ".hearth-companions" ? scene : null;
   mailbox.contains = (target) => target === mailbox;
   doc.querySelector = () => mailbox;
   const reduced = new EventTarget();

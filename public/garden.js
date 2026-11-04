@@ -1,4 +1,4 @@
-import { GRID_X, GRID_Y, RAIN_INK, addRipple, createRain, moveShelter, indexText, overlapsIndexedText, rainOpacity, resizeRain, stepRain } from "./rain.js";
+import { GRID_X, GRID_Y, addRipple, createRain, moveShelter, indexText, overlapsIndexedText, rainOpacity, resizeRain, stepRain } from "./rain.js";
 import { createRainAudio, fireplaceProximity } from "./rain-audio.js";
 import { installInteractionSounds } from "./interaction-sounds.js";
 import { installUmbrella } from "./umbrella.js";
@@ -9,6 +9,8 @@ import { installPuddles } from "./puddles.js";
 import { installThoughts } from "./thoughts.js";
 import { createRainGlyphs } from "./rain-glyphs.js";
 import { installMailbox } from "./mailbox.js";
+import { installHeaderGlass } from "./header-glass.js";
+import { createRainPreference, installPageTools } from "./page-tools.js";
 
 const canvas = document.querySelector("#garden");
 const context = canvas.getContext("2d");
@@ -21,6 +23,7 @@ const status = document.querySelector("#garden-status");
 const hint = document.querySelector("#garden-hint");
 const graphActivity = document.querySelector("[data-graph-playground]");
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+const rainPreference = createRainPreference(window, message => { status.textContent = message; });
 const rain = createRain(document.documentElement.clientWidth, innerHeight);
 const puddles = installPuddles(document);
 
@@ -128,7 +131,7 @@ function resize() {
   canvas.width = Math.round(width * scale);
   canvas.height = Math.round(innerHeight * scale);
   context?.setTransform(scale, 0, 0, scale, 0, 0);
-  if (context) rainGlyphs = createRainGlyphs(document, scale);
+  if (context) rainGlyphs = createRainGlyphs(document, scale, getComputedStyle(document.documentElement).getPropertyValue("--rain-ink").trim());
   resizeRain(rain, width, innerHeight);
   textNeedsUpdate = true;
   layoutNeedsUpdate = true;
@@ -149,7 +152,6 @@ function render() {
   context.font = "600 13px Consolas, monospace";
   context.textAlign = "center";
   context.textBaseline = "middle";
-  context.fillStyle = RAIN_INK;
 
   for (const drop of rain.drops) {
     const x = Math.round(drop.x / GRID_X) * GRID_X;
@@ -272,7 +274,10 @@ async function setSound(enabled, feedback = false) {
 }
 
 labelSound(soundEnabled);
-motionButton.addEventListener("click", () => setMotion(!motionEnabled));
+motionButton.addEventListener("click", () => {
+  setMotion(!motionEnabled);
+  rainPreference.remember(motionEnabled);
+});
 soundButton.addEventListener("click", () => setSound(!soundEnabled, true));
 function playInteraction(kind) {
   if (!soundEnabled || document.hidden) return false;
@@ -283,8 +288,18 @@ const umbrella = installUmbrella(document, {
   onChange() { if (!motionEnabled) render(); },
   onToggle(open) { playInteraction(open ? "umbrella-open" : "umbrella-close"); },
 });
-reducedMotion.addEventListener("change", () => setMotion(!reducedMotion.matches));
+reducedMotion.addEventListener("change", () => setMotion(rainPreference.enabled(reducedMotion.matches)));
+window.addEventListener("pageshow", event => {
+  if (!event.persisted) return;
+  rainPreference.restore();
+  setMotion(rainPreference.enabled(reducedMotion.matches));
+});
 window.addEventListener("resize", resize);
+window.addEventListener("themechange", () => {
+  if (context) rainGlyphs = createRainGlyphs(document, Math.min(devicePixelRatio || 1, 1.5), getComputedStyle(document.documentElement).getPropertyValue("--rain-ink").trim());
+  textNeedsUpdate = true;
+  if (!motionEnabled) render();
+});
 window.addEventListener("scroll", () => {
   textNeedsUpdate = true;
   if (!motionEnabled) render();
@@ -361,10 +376,12 @@ installListening(document);
 installThoughts(document);
 installMailbox(document);
 installHearth(document);
+installHeaderGlass(document);
+installPageTools(document);
 if (context) decorateHouse(document);
 if (!context) {
   motionButton.disabled = true;
   status.textContent = "The ASCII rain needs canvas support. All the writing and links still work.";
 }
 resize();
-setMotion(!reducedMotion.matches);
+setMotion(rainPreference.enabled(reducedMotion.matches));

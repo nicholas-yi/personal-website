@@ -32,6 +32,10 @@ export function installPuddles(doc) {
   if (!context) return { measure() { return null; }, render() {} };
   let bounds = null;
   let width = 0;
+  let ink = doc.defaultView.getComputedStyle(doc.documentElement).getPropertyValue("--puddle-ink").trim();
+  doc.defaultView.addEventListener("themechange", () => {
+    ink = doc.defaultView.getComputedStyle(doc.documentElement).getPropertyValue("--puddle-ink").trim();
+  });
   return {
     measure(measuredBounds) {
       bounds = measuredBounds || container.getBoundingClientRect();
@@ -46,7 +50,7 @@ export function installPuddles(doc) {
     render(time, ripples) {
       if (!bounds || bounds.top > doc.defaultView.innerHeight || bounds.bottom < 0) return;
       context.clearRect(0, 0, width, 128);
-      context.fillStyle = "#526960";
+      context.fillStyle = ink;
       context.globalAlpha = 0.55;
       context.font = "11px Consolas, monospace";
       context.textAlign = "center";

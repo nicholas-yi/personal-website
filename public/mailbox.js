@@ -2,6 +2,7 @@ export function installMailbox(doc) {
   const mailbox = doc.querySelector(".mailbox");
   if (!mailbox) return;
   const scene = mailbox.closest(".hearth-companions");
+  const engagement = mailbox.closest(".mail-corner") ?? mailbox;
   const view = doc.defaultView;
   const reduced = view.matchMedia("(prefers-reduced-motion: reduce)");
   let hovered = false;
@@ -29,15 +30,15 @@ export function installMailbox(doc) {
       timer = view.setTimeout(() => setPhase("idle"), 750);
     }
   }
-  mailbox.addEventListener("pointerenter", (event) => {
+  engagement.addEventListener("pointerenter", (event) => {
     if (event.pointerType === "touch") return;
     hovered = true;
     update();
   });
-  mailbox.addEventListener("pointerleave", () => { hovered = false; update(); });
-  mailbox.addEventListener("focusin", () => { focused = true; update(); });
-  mailbox.addEventListener("focusout", (event) => {
-    if (mailbox.contains(event.relatedTarget)) return;
+  engagement.addEventListener("pointerleave", () => { hovered = false; update(); });
+  engagement.addEventListener("focusin", () => { focused = true; update(); });
+  engagement.addEventListener("focusout", (event) => {
+    if (engagement.contains(event.relatedTarget)) return;
     focused = false;
     update();
   });

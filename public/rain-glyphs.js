@@ -1,6 +1,6 @@
 import { RAIN_GLYPHS, RAIN_INK } from "./rain.js";
 
-export function createRainGlyphs(doc, scale) {
+export function createRainGlyphs(doc, scale, ink = RAIN_INK) {
   const symbols = [...new Set([...RAIN_GLYPHS, "o", "/", "\\"])];
   const cellWidth = 24;
   const cellHeight = 28;
@@ -13,7 +13,7 @@ export function createRainGlyphs(doc, scale) {
   context.font = "600 13px Consolas, monospace";
   context.textAlign = "center";
   context.textBaseline = "middle";
-  context.fillStyle = RAIN_INK;
+  context.fillStyle = ink;
   for (const [index, symbol] of symbols.entries()) context.fillText(symbol, index * cellWidth + cellWidth / 2, cellHeight / 2);
   const positions = new Map(symbols.map((symbol, index) => [symbol, index]));
   return {

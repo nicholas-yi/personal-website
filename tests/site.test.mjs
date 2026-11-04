@@ -52,8 +52,8 @@ test("mailbox approach and departure are local decorative behavior without inter
   const html = await (await fetch(origin)).text();
   assert.ok(html.includes('class="mailbox-art" aria-hidden="true"><span class="perching-mail"'));
   const source = await (await fetch(`${origin}/mailbox.js`)).text();
-  assert.ok(source.includes('mailbox.addEventListener("pointerenter"'));
-  assert.ok(source.includes('mailbox.addEventListener("focusin"'));
+  assert.ok(source.includes('engagement.addEventListener("pointerenter"'));
+  assert.ok(source.includes('engagement.addEventListener("focusin"'));
   assert.ok(source.includes('setPhase("perched")'));
   assert.ok(source.includes('setPhase("departing")'));
   assert.ok(!source.includes("preventDefault"));
@@ -69,7 +69,7 @@ test("the reading experience and keyboard skip target don't depend on JavaScript
   const html = await (await fetch(origin)).text();
   assert.ok(html.includes('class="skip-link" href="#main"'));
   assert.ok(html.includes('<main id="main" tabindex="-1">'));
-  assert.ok(html.includes('class="garden-controls" aria-label="Rain settings" hidden'));
+  assert.ok(html.includes('class="garden-controls" aria-label="Atmosphere settings" hidden'));
   assert.ok(html.includes('<canvas id="garden" aria-hidden="true">'));
   assert.ok(!html.includes("<audio") && !html.includes("autoplay"));
 });
@@ -92,6 +92,54 @@ test("sound defaults off with a crossed-out speaker and starts only through its 
   assert.match(css, /\.sound-waves \{ display: none; \}/);
   assert.match(css, /\[aria-pressed="true"\] \.sound-waves \{ display: block; \}/);
   assert.match(css, /\[aria-pressed="true"\] \.sound-muted \{ display: none; \}/);
+});
+
+test("rain preferences are visit-scoped and writing/mail copy tools are native progressive enhancements", async () => {
+  const garden = await (await fetch(`${origin}/garden.js`)).text();
+  assert.ok(garden.includes("rainPreference.remember(motionEnabled)"));
+  assert.ok(garden.includes("rainPreference.enabled(reducedMotion.matches)"));
+  assert.ok(garden.includes('window.addEventListener("pageshow"'));
+  assert.ok(garden.includes("installPageTools(document)"));
+  const tools = await fetch(`${origin}/page-tools.js`);
+  assert.equal(tools.status, 200);
+  assert.match(tools.headers.get("content-type"), /javascript/);
+  const source = await tools.text();
+  assert.ok(source.includes("sessionStorage") && !source.includes("localStorage"));
+  assert.ok(source.includes('view.addEventListener("hashchange"'));
+  assert.ok(source.includes("clipboard.writeText(text)"));
+  assert.ok(!source.includes("execCommand"));
+  const home = await (await fetch(origin)).text();
+  assert.ok(home.includes('class="mail-corner"'));
+  assert.ok(home.includes('data-copy-email aria-label="Copy email address" hidden'));
+  assert.ok(home.includes('class="copy-status" role="status" aria-live="polite"'));
+  const links = await (await fetch(`${origin}/links.html`)).text();
+  for (const id of ["stashbird-case-study", "evaluation-field-note"]) assert.ok(links.includes(`data-copy-note="${id}"`));
+  const css = await (await fetch(`${origin}/styles.css`)).text();
+  assert.ok(css.includes(".mail-corner .mailbox { grid-column: 1; }"));
+  assert.match(css, /\.copy-action \{[^}]*min-height: 44px/);
+});
+
+test("all pages restore a manual palette before CSS and provide an independent accessible lamp toggle", async () => {
+  for (const path of ["/", "/about.html", "/links.html", "/404.html"]) {
+    const html = await (await fetch(`${origin}${path}`)).text();
+    assert.match(html, /<script src="\/?theme\.js"><\/script>/);
+    assert.ok(html.indexOf("theme.js") < html.indexOf("styles.css"));
+    assert.match(html, /<link rel="stylesheet" href="\/?theme\.css">/);
+    assert.ok(html.includes('id="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to lamplight"'));
+    assert.ok(html.includes('class="theme-lamp"') && html.includes('class="theme-daylight"'));
+  }
+  for (const [path, mime] of [["theme.js", /javascript/], ["theme.css", /text\/css/]]) {
+    const asset = await fetch(`${origin}/${path}`);
+    assert.equal(asset.status, 200);
+    assert.match(asset.headers.get("content-type"), mime);
+  }
+  const script = await (await fetch(`${origin}/theme.js`)).text();
+  assert.ok(script.includes("localStorage") && !script.includes("sessionStorage"));
+  assert.ok(!script.includes("matchMedia") && !script.includes("setInterval") && !script.includes("AudioContext"));
+  const css = await (await fetch(`${origin}/theme.css`)).text();
+  assert.ok(css.includes("@media screen and (forced-colors: none)"));
+  assert.ok(css.includes("--paper: #24231f;") && css.includes("--ink: #ece5d2;"));
+  assert.ok(!css.includes("invert(") && !css.includes("@keyframes"));
 });
 
 test("the public README preserves the supplied wording except the approved recording credits", async () => {
@@ -273,8 +321,16 @@ test("public accomplishments link to the paper, PDF, article, and official compe
 test("the header has one aligned tinted frame, preserves content alignment, and keeps decoration bounded", async () => {
   const css = await (await fetch(`${origin}/styles.css`)).text();
   assert.ok(!css.includes(".site-header::before"));
-  assert.match(css, /\.site-header \{[^}]*margin-inline: -12px; padding: 18px 11px;[^}]*background: rgb\(232 236 223 \/ 50%\); border: 1px solid #aeb99e; border-radius: 6px/);
+  assert.match(css, /\.site-header \{[^}]*margin-inline: -12px; padding: 18px 11px;[^}]*background: rgb\(232 236 223 \/ 92\.5%\); border: 1px solid #aeb99e; border-radius: 6px/);
   assert.doesNotMatch(css, /\.site-header \{[^}]*\bopacity:/);
+  assert.match(css, /\.header-glass \{[^}]*position: absolute; inset: 0;[^}]*border-radius: inherit; pointer-events: none/);
+  assert.ok(css.includes('.site-header[data-glass="ready"]'));
+  assert.match(css, /\.site-header\[data-glass="ready"\] \{[^}]*rgb\(232 236 223 \/ 12%\)/);
+  const glass = await fetch(`${origin}/header-glass.js`);
+  assert.equal(glass.status, 200);
+  assert.match(glass.headers.get("content-type"), /javascript/);
+  const garden = await (await fetch(`${origin}/garden.js`)).text();
+  assert.ok(garden.includes("installHeaderGlass(document)"));
   assert.ok(css.includes(".site-header { padding: 16px 11px; }"));
   assert.match(css, /nav a \{[^}]*min-width: 44px; min-height: 44px;[^}]*color: var\(--green\)/);
   assert.match(css, /\.home-link \{[^}]*min-width: 44px; min-height: 44px/);
