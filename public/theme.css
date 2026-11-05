@@ -33,7 +33,7 @@
     box-shadow: inset 0 1px 0 #e8c58a38, inset 0 -1px 0 #94774c38, 0 3px 16px #100e0b40;
   }
   :root[data-theme="lamplight"] .site-header[data-glass="ready"] > :is(.home-link, nav) { text-shadow: 0 1px 5px #24231f, 0 0 2px #24231f; }
-  :root[data-theme="lamplight"] :is(.home-mark, .rain-window, .window-shutter, .window-mullion, .window-crossbar, .window-lintel, .window-sill, .house-roof, .picture-frame, .thinking-chair, .about-garden, .hearth-object) { color: #adb998; }
+  :root[data-theme="lamplight"] :is(.home-mark, .rain-window, .window-shutter, .window-mullion, .window-crossbar, .window-lintel, .window-sill, .window-objects, .house-roof, .picture-frame, .thinking-chair, .about-garden, .hearth-object) { color: #adb998; }
   :root[data-theme="lamplight"] .rain-pane { background: #3a40382e; }
   :root[data-theme="lamplight"] .house-body { background: #2a2822; border-color: #675a4277; }
   :root[data-theme="lamplight"] .links-house .public-link-entry { border-bottom-color: #675a4277; }
@@ -49,6 +49,7 @@
   :root[data-theme="lamplight"] .sidequest-path > li:nth-child(4),
   :root[data-theme="lamplight"] .sidequest-conclusion > span:nth-child(4) { --thread-ink: #d8b27d; }
   :root[data-theme="lamplight"] .hearth { color: #b9a17c; }
+  :root[data-theme="lamplight"] .hearth-embers { color: #efb86a; }
   :root[data-theme="lamplight"] .hearth-fire { color: #efb86a; background: radial-gradient(ellipse at 50% 70%, #d29a454d, transparent 75%); box-shadow: 0 7px 35px #d58e3029; }
   :root[data-theme="lamplight"] .click-umbrella { color: #c8c0a3; }
   :root[data-theme="lamplight"] .listening-card { background: #2c2922; border-color: #716044; box-shadow: 0 8px 26px #0e0c0960; }

@@ -398,7 +398,7 @@ test("work preserves chronology and the scoped team award alongside the requeste
   const html = await (await fetch(origin)).text();
   assert.ok(html.includes("Speech recognition designed to better understand people who stutter."));
   assert.ok(html.includes("Team 1st place &#183; Ability Hack Executive Challenge"));
-  assert.ok(html.includes("Microsoft Global Hackathon, 2025"));
+  assert.ok(html.includes('class="eyebrow">Microsoft Global Hackathon</div>'));
   assert.ok(html.includes("My brother stutters, so making speech technology more accessible is personal to me."));
   assert.ok(!html.includes("Hypothetical Growth Targets"));
   const cards = [...html.matchAll(/<article class="work-item" data-work="([^"]+)">([\s\S]*?)<\/article>/g)];
@@ -573,7 +573,7 @@ test("all pages have global navigation and a still-usable ASCII fireplace", asyn
     assert.ok(html.includes('class="site-header"'));
     assert.ok(html.includes('href="about.html"'));
     assert.ok(!html.includes('href="index.html#about"'));
-    assert.ok(html.includes('class="hearth" role="img"'));
+    assert.ok(html.includes('class="hearth" role="group"'));
     assert.ok(html.includes('class="hearth-frame hearth-frame-one"'));
     assert.ok(html.includes("a warm place to end up."));
     assert.equal((html.match(/class="house-roof"/g) || []).length, 1);
@@ -666,13 +666,184 @@ test("the about house has picture-frame, fireplace, and flower furniture in the 
   assert.match(css, /\.house-furniture \{[^}]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)[^}]*column-gap: 0/);
   assert.equal(row.match(/class="picture-art"[\s\S]*?<pre[^>]*>([\s\S]*?)<\/pre>/)[1].split("\n").length, 14);
   assert.equal(row.match(/class="hearth-surround"[^>]*>([\s\S]*?)<\/pre>/)[1].split("\n").length, 14);
-  assert.ok(row.includes('aria-label="An opening flower and a small unopened bud."'));
-  assert.ok(row.includes("         |   .-.\n         |   \\_/"));
+  assert.ok(row.includes('aria-label="Grow all three flowers and welcome a butterfly"'));
+  assert.ok(row.includes('class="flower-branch flower-right"'));
   assert.match(css, /\.picture-photo \{[^}]*height: 13\.5em;[^}]*object-fit: cover;[^}]*object-position: center/);
   const graph = await (await fetch(`${origin}/graph.js`)).text();
   assert.ok(graph.includes('actions.append(undo, redo, clear)'));
 });
 
+test("home has a compact hearth while the other fireplaces retain matching tall art and shared glyph sizing", async () => {
+  const surrounds = [];
+  for (const path of ["/", "/about", "/links", "/404"]) {
+    const html = await (await fetch(`${origin}${path}`)).text();
+    const art = html.match(/<pre class="hearth-surround" aria-hidden="true">([\s\S]*?)<\/pre>/)[1].replace(/\r\n/g, "\n");
+    if (path !== "/") surrounds.push(art);
+    assert.equal(art.split("\n").length, path === "/" ? 9 : 14);
+    assert.match(art, /^[\x20-\x7e\n]+$/);
+    assert.ok(html.includes('class="hearth" role="group"'));
+    assert.ok(html.includes('data-scene-detail="embers" aria-label="Stir a few fireplace embers" disabled'));
+    assert.equal((html.match(/<span class="hearth-embers" aria-hidden="true"><i>\.<\/i><i>'<\/i><\/span>/g) ?? []).length, 1);
+  }
+  assert.ok(surrounds.every(art => art === surrounds[0]));
+  const css = await (await fetch(`${origin}/styles.css`)).text();
+  assert.match(css, /\.hearth \{[^}]*font: clamp\(3\.5px, 1\.1vw, 11px\)\/1\.35 var\(--mono\)/);
+  assert.doesNotMatch(css, /\.(?:house-furniture|hearth-companions) \.hearth \{[^}]*font-size:/);
+  assert.match(css, /\.hearth \.ember-trigger \{[^}]*grid-row: 1 \/ 2;/);
+});
+
+test("the scene details preserve native controls, three-branch growth, and breathing room below the sill", async () => {
+  const home = await (await fetch(origin)).text();
+  const about = (await (await fetch(`${origin}/about`)).text()).replace(/\r\n/g, "\n");
+  const links = await (await fetch(`${origin}/links`)).text();
+  for (const [html, kind] of [[home, "steam"], [home, "plant"], [home, "bird"], [home, "agent"], [home, "graph"], [home, "speech"], [about, "flower"], [links, "chair"]]) {
+    assert.match(html, new RegExp(`<button[^>]*type="button"[^>]*data-scene-detail="${kind}"[^>]*aria-label="[^"]+"[^>]*disabled`));
+  }
+  assert.ok(!home.includes('class="rain-window" aria-hidden="true"'));
+  assert.ok(!home.includes('class="work-art bird-art" aria-hidden="true"'));
+  const sill = home.match(/<pre class="window-sill"[^>]*>([\s\S]*?)<\/pre>/)[1].replace(/\r\n/g, "\n");
+  assert.equal(sill.split("\n").length, 3);
+  assert.ok(home.indexOf('class="window-objects"') > home.indexOf(sill));
+  assert.ok(home.includes('class="cup-steam"> ( (</span>'));
+  assert.ok(home.includes('class="bird-eye"><span>o</span></span>'));
+  assert.ok(about.includes('aria-label="Grow all three flowers and welcome a butterfly"'));
+  const base = about.match(/<pre class="flower-base"[^>]*>([\s\S]*?)<\/pre>/)[1].split("\n");
+  assert.equal((about.match(/class="flower-branch flower-(?:left|center|right)"/g) ?? []).length, 3);
+  assert.equal((about.match(/<pre class="flower-petals">/g) ?? []).length, 2);
+  assert.equal((about.match(/class="flower-crown"/g) ?? []).length, 1);
+  assert.doesNotMatch(about, /flower-rest|flower-grown/);
+  assert.equal(base.length, 6);
+  assert.equal(base[3], "   ___\\__|__/___");
+  assert.ok(about.includes('class="plant-butterfly" aria-hidden="true"'));
+  assert.ok(about.includes("<span><i>()</i>|<i>()</i></span>"));
+  assert.ok(about.includes('class="flower-bud">.-.\n\\_/</pre>'));
+  const css = await (await fetch(`${origin}/styles.css`)).text();
+  assert.match(css, /\.window-objects \{[^}]*padding: 14px 5ch 0/);
+  assert.ok(css.includes('.flower-crown { transform: translateY(-1.4em); }'));
+  assert.ok(css.includes('.flower-left .flower-tip { transform: translate(-0.9ch, -0.7em) rotate(-8deg); }'));
+  assert.ok(css.includes('.flower-right .flower-tip { transform: translate(0.9ch, -0.9em) rotate(8deg); }'));
+  assert.ok(css.includes("transition: transform 950ms cubic-bezier"));
+  assert.match(css, /\.flower-base \{ top: 9\.8em; \}/);
+  assert.match(css, /\.flower-trigger \{ width: 18ch; height: 18\.2em;/);
+  assert.match(css, /\.work-art \.scene-trigger \{ align-self: center; font: 12px\/1\.35 var\(--mono\); \}/);
+  assert.ok(home.includes("      '-'-</pre>"));
+  assert.match(css, /\.thinking-chair-art \{ transform-origin: 50% 95%; \}/);
+  assert.doesNotMatch(css, /animation:\s*(?:chair-rock|cup-curl|bird-blink|ember-rise)[^;}]*infinite/);
+  const script = await fetch(`${origin}/scene-details.js`);
+  assert.equal(script.status, 200);
+  assert.match(script.headers.get("content-type"), /javascript/);
+  assert.doesNotMatch(await script.text(), /requestAnimationFrame|setInterval|AudioContext|fetch\(/);
+  const garden = await (await fetch(`${origin}/garden.js`)).text();
+  assert.ok(garden.includes('import { installSceneDetails } from "./scene-details.js"'));
+  assert.ok(garden.includes("installSceneDetails(document)"));
+  const theme = await (await fetch(`${origin}/theme.css`)).text();
+  assert.match(theme, /:is\([^}]*\.window-objects[^}]*\) \{ color: #adb998; \}/);
+  assert.ok(theme.includes('.hearth-embers { color: #efb86a; }'));
+});
+
+test("project cards consistently place organization above the title and date/role/links in the metadata row", async () => {
+  const dates = { mai: "2025-07", stashbird: "2026-09", graphrag: "2026-04", staccato: "2025-11" };
+  const roles = { mai: "software engineer / infrastructure / evaluation / post-training", stashbird: "co-author", graphrag: "co-author", staccato: "team member" };
+  for (const path of ["/", "/links"]) {
+    const html = await (await fetch(`${origin}${path}`)).text();
+    const cards = path === "/"
+      ? [...html.matchAll(/<article class="work-item" data-work="([^"]+)">([\s\S]*?)<\/article>/g)]
+      : [...html.matchAll(/<li class="public-link-entry"[^>]*data-work="([^"]+)"[^>]*>([\s\S]*?)<\/li>/g)];
+    for (const [id, date] of Object.entries(dates)) {
+      const card = cards.find(match => match[1] === id)?.[2];
+      assert.ok(card, `Missing ${id} on ${path}`);
+      const eyebrow = card.match(/<div class="eyebrow">([\s\S]*?)<\/div>/)[1];
+      assert.doesNotMatch(eyebrow, /<time|datetime=/);
+      assert.match(eyebrow, /Microsoft/);
+      const metadata = card.match(/<div class="work-links">([\s\S]*?)<\/div>/)[1];
+      assert.ok(metadata.includes(`datetime="${date}"`));
+      assert.ok(metadata.includes(roles[id]));
+      assert.ok(metadata.indexOf("<time") < metadata.indexOf(roles[id]));
+      if (metadata.includes("<a ")) assert.ok(metadata.indexOf(roles[id]) < metadata.indexOf("<a "));
+      assert.ok(card.indexOf('class="eyebrow"') < card.indexOf("<h3>"));
+      assert.ok(card.indexOf('class="work-links"') > card.indexOf("</h3>"));
+      if (id === "mai") assert.ok(!metadata.includes("<a "));
+    }
+  }
+});
+
+test("all four ASCII project controls are centered and use finite manual animations independent of rain", async () => {
+  const html = await (await fetch(origin)).text();
+  for (const kind of ["agent", "bird", "graph", "speech"]) assert.ok(html.includes(`data-scene-detail="${kind}"`));
+  assert.ok(html.includes('class="bird-wing"'));
+  assert.equal((html.match(/class="graph-frame graph-/g) ?? []).length, 4);
+  assert.ok(html.includes('class="speech-bars" aria-hidden="true"'));
+  assert.ok(html.includes('class="check-run"'));
+  assert.ok(html.includes('class="check-test"'));
+  assert.ok(html.includes('class="check-learn"'));
+  const css = await (await fetch(`${origin}/styles.css`)).text();
+  for (const animation of ["object-jiggle", "bird-flap", "checklist-run", "checklist-test", "checklist-learn", "graph-snip", "graph-prune", "graph-rewire", "speech-pass"]) {
+    assert.ok(css.includes(`@keyframes ${animation}`));
+  }
+  assert.doesNotMatch(css, /\[data-rain[^\]]*\][^{]*\.(?:flower-trigger|bird-trigger|agent-trigger|graph-trigger|speech-trigger|teacup-trigger|plant-trigger)/);
+  const source = await (await fetch(`${origin}/scene-details.js`)).text();
+  assert.ok(!source.includes("dataset.rain"));
+  assert.ok(source.includes('["bird", "agent", "graph", "speech"]'));
+});
+
+test("the project animations contain the complete checklist, wing outline and genuinely changed graph topologies", async () => {
+  const html = (await (await fetch(origin)).text()).replace(/\r\n/g, "\n");
+  assert.match(html, /\[<span class="check-run">x<\/span>\] run/);
+  assert.match(html, /\[<span class="check-test">x<\/span>\] test/);
+  assert.match(html, /\[<span class="check-learn">x<\/span>\] learn/);
+  const wing = html.match(/<pre class="bird-wing">([\s\S]*?)<\/pre>/)[1];
+  assert.deepEqual(wing.split("\n"), [" .-.", "/  /", "'--'"]);
+  const frames = [...html.matchAll(/<pre class="graph-frame [^"]+" data-graph-phase="([^"]+)">([\s\S]*?)<\/pre>/g)];
+  assert.deepEqual(frames.map(frame => frame[1]), ["original", "snip", "prune", "rewire"]);
+  for (const [, , art] of frames) {
+    assert.equal(art.split("\n").length, 7);
+    assert.ok(art.split("\n").every(row => row.length <= 12));
+    assert.match(art, /^[\x20-\x7e\n]+$/);
+  }
+  const [original, snip, prune, rewire] = frames.map(frame => frame[2].split("\n"));
+  assert.deepEqual(original, [
+    "   o --- o",
+    "  / \\     \\",
+    " o   o --- o",
+    "  \\ / \\   /",
+    "   o   o-o",
+    "    \\ /",
+    "     o",
+  ]);
+  assert.equal(snip[0], "   o  x  o");
+  assert.equal((original.join("").match(/o/g) ?? []).length, 9);
+  assert.equal((prune.join("").match(/o/g) ?? []).length, 8);
+  assert.equal((rewire.join("").match(/o/g) ?? []).length, 9);
+  assert.equal(prune[0], "   o");
+  assert.equal(prune[1], "  / \\");
+  assert.equal(rewire[0], "   o     o");
+  assert.equal(rewire[2], " o   o --+-o");
+  assert.equal(rewire[1][9], "|");
+  assert.equal(rewire[3][9], "|");
+  const nodePositions = rows => rows.flatMap((row, y) => [...row].flatMap((character, x) => character === "o" ? [`${x},${y}`] : []));
+  assert.deepEqual(nodePositions(snip), nodePositions(original));
+  assert.deepEqual(nodePositions(rewire), nodePositions(original));
+  assert.deepEqual(nodePositions(prune), nodePositions(original).filter(position => position !== "9,0"));
+  const css = await (await fetch(`${origin}/styles.css`)).text();
+  assert.doesNotMatch(css, /graph-cluster|nodes-shift|nodes-return|test-clear|run-check/);
+  assert.match(css, /\.bird-stage \.bird-wing \{[^}]*position: absolute;[^}]*transform-origin: 85% 15%/);
+  assert.match(css, /\.graph-stage \{[^}]*width: 12ch; height: 9\.45em/);
+});
+
+test("the microphone silhouette is symmetric inside a centered nine-character stage", async () => {
+  const html = (await (await fetch(origin)).text()).replace(/\r\n/g, "\n");
+  const art = html.match(/<pre class="speech-mic" aria-hidden="true">([\s\S]*?)<\/pre>/)[1].split("\n");
+  assert.deepEqual(art, ["  .---.", "  |:::|", " (|:::|)", "  '---'", "    |", " ___|___"]);
+  const centered = art.map(row => {
+    const first = row.search(/\S/);
+    const last = row.trimEnd().length - 1;
+    return (first + last + 1) / 2;
+  });
+  assert.ok(centered.every(center => center === 4.5));
+  const css = await (await fetch(`${origin}/styles.css`)).text();
+  assert.match(css, /\.speech-trigger \.speech-mic \{ width: 9ch; margin-inline: auto; font: inherit; \}/);
+  assert.match(css, /\.speech-bars \{[^}]*font: inherit;/);
+});
 test("About keeps a single static portrait without bookshelf or carousel previews", async () => {
   const html = await (await fetch(`${origin}/about`)).text();
   assert.equal((html.match(/class="picture-photo"/g) ?? []).length, 1);
@@ -819,7 +990,7 @@ test("missing URLs serve the roofed 404 with root-relative recovery links, never
     assert.ok(html.includes('href="/index.html">Back home'));
     assert.ok(html.includes('href="/styles.css"') && html.includes('src="/garden.js"'));
     assert.ok(html.includes('class="house-roof"') && html.includes('class="house-body"'));
-    assert.ok(html.includes('class="hearth" role="img"'));
+    assert.ok(html.includes('class="hearth" role="group"'));
     assert.ok(html.includes('<main id="main" class="error-main" tabindex="-1">'));
     assert.ok(!html.includes("deeply/nested/missing"));
     const head = await fetch(`${origin}${path}`, { method: "HEAD" });

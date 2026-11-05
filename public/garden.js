@@ -11,6 +11,7 @@ import { createRainGlyphs } from "./rain-glyphs.js";
 import { installMailbox } from "./mailbox.js";
 import { installHeaderGlass } from "./header-glass.js";
 import { createRainPreference, installPageTools } from "./page-tools.js";
+import { installSceneDetails } from "./scene-details.js";
 
 const canvas = document.querySelector("#garden");
 const context = canvas.getContext("2d");
@@ -380,6 +381,7 @@ installMailbox(document);
 installHearth(document);
 installHeaderGlass(document);
 installPageTools(document);
+installSceneDetails(document);
 if (context) decorateHouse(document);
 if (!context) {
   motionButton.disabled = true;

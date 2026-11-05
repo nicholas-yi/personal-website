@@ -31,6 +31,7 @@ const assets = new Map([
   ["/mailbox.js", ["mailbox.js", "text/javascript; charset=utf-8"]],
   ["/header-glass.js", ["header-glass.js", "text/javascript; charset=utf-8"]],
   ["/page-tools.js", ["page-tools.js", "text/javascript; charset=utf-8"]],
+  ["/scene-details.js", ["scene-details.js", "text/javascript; charset=utf-8"]],
   ["/thoughts.js", ["thoughts.js", "text/javascript; charset=utf-8"]],
   ["/puddles.js", ["puddles.js", "text/javascript; charset=utf-8"]],
   ["/rain-audio.js", ["rain-audio.js", "text/javascript; charset=utf-8"]],

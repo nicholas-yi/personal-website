@@ -121,7 +121,7 @@
                 </div>
                 <figcaption>a moment, framed.</figcaption>
               </figure>
-              <div class="hearth" role="img" aria-label="A small ASCII fireplace with gently flickering flames.">
+              <div class="hearth" role="group" aria-label="A small ASCII fireplace with gently flickering flames.">
                 <pre class="hearth-surround" aria-hidden="true">  _______________________________
  /_______________________________\
  |  [__] [__] [__] [__] [__] [__] |
@@ -136,6 +136,7 @@
  | [__] |                 | [__] |
  |______|_________________|______|
  /_______________________________\</pre>
+                <button class="scene-trigger ember-trigger" type="button" data-scene-detail="embers" aria-label="Stir a few fireplace embers" disabled><span class="hearth-embers" aria-hidden="true"><i>.</i><i>'</i></span></button>
                 <div class="hearth-fire" aria-hidden="true">
                   <pre class="hearth-frame hearth-frame-one">     (  )
   (  ) /(
@@ -156,19 +157,44 @@
                 <span class="hearth-caption">a warm place to end up.</span>
               </div>
               <div class="about-garden">
-                <pre role="img" aria-label="An opening flower and a small unopened bud.">       .   .
-      ( \ / )
-       \ o /
-        \_/
-         |
-         |   .-.
-         |   \_/
-    \    |  /
+                <button class="scene-trigger flower-trigger" type="button" data-scene-detail="flower" aria-pressed="false" aria-label="Grow all three flowers and welcome a butterfly" disabled>
+                  <span class="flower-branch flower-center" aria-hidden="true">
+                    <pre class="flower-crown"> .   .
+( \ / )
+ \ o /
+  \_/</pre>
+                    <span class="flower-stalk">|
+|
+|</span>
+                  </span>
+                  <span class="flower-branch flower-left" aria-hidden="true">
+                    <span class="flower-side-stalk">|</span>
+                    <span class="flower-tip">
+                      <span class="flower-bud">.</span>
+                      <pre class="flower-petals"> . .
+(\o/)
+ \_/</pre>
+                    </span>
+                  </span>
+                  <span class="flower-branch flower-right" aria-hidden="true">
+                    <span class="flower-side-stalk">|
+|</span>
+                    <span class="flower-tip">
+                      <pre class="flower-bud">.-.
+\_/</pre>
+                      <pre class="flower-petals"> . .
+(\o/)
+ \_/</pre>
+                    </span>
+                  </span>
+                  <pre class="flower-base" aria-hidden="true">    \    |  /
      \   | /
       \  |/
    ___\__|__/___
   /             \
   \_____________/</pre>
+                  <span class="plant-butterfly" aria-hidden="true"><span> \ / </span><span><i>()</i>|<i>()</i></span></span>
+                </button>
                 <span>and room to grow.</span>
               </div>
             </div>

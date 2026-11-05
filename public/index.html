@@ -47,12 +47,12 @@
 
       <main id="main" tabindex="-1">
         <section class="intro" aria-labelledby="name">
-          <div class="rain-window" aria-hidden="true">
+          <div class="rain-window">
             <div class="window-scene">
-              <pre class="window-lintel" data-window-ink>  .__________________________________.
+              <pre class="window-lintel" data-window-ink aria-hidden="true">  .__________________________________.
 +--+----------------------------------+--+
 |  |                                  |  |</pre>
-              <div class="window-opening">
+              <div class="window-opening" aria-hidden="true">
                 <pre class="window-shutter window-left" data-window-ink>| :|
 | :|
 | :|
@@ -104,13 +104,23 @@
 |\ |
 | \|</pre>
               </div>
-              <pre class="window-sill" data-window-ink>|  |________________|_________________|  |
+              <pre class="window-sill" data-window-ink aria-hidden="true">|  |________________|_________________|  |
 |__|__________________________________|__|
- /______________________________________/
-       \ | /                 ( (
-        \|/                 .---.
-      .--Y--.               |   |]
-      |_____|               '---'</pre>
+ /______________________________________/</pre>
+              <div class="window-objects">
+                <button class="scene-trigger plant-trigger" type="button" data-scene-detail="plant" aria-label="Give the little windowsill plant a nudge" disabled>
+                  <pre class="window-plant" data-window-ink aria-hidden="true"> \ | /
+  \|/
+.--Y--.
+|_____|</pre>
+                </button>
+                <button class="scene-trigger teacup-trigger" type="button" data-scene-detail="steam" aria-label="Watch the teacup steam curl" disabled>
+                  <pre data-window-ink aria-hidden="true"><span class="cup-steam"> ( (</span>
+.---.
+|   |]
+'---'</pre>
+                </button>
+              </div>
             </div>
             <span class="window-caption">a good day to stay in.</span>
           </div>
@@ -140,35 +150,48 @@
           </div>
 
           <article class="work-item" data-work="mai">
-            <div class="work-art agent-art" aria-hidden="true">
-              <span class="art-corner">01</span>
-              <pre> .-----------.
- | &gt; run     |
- | [ ] test  |
- | [x] learn |
+            <div class="work-art agent-art">
+              <span class="art-corner" aria-hidden="true">01</span>
+              <button class="scene-trigger agent-trigger" type="button" data-scene-detail="agent" aria-label="Run the experiment checklist" disabled>
+                <pre aria-hidden="true"> .-----------.
+ | [<span class="check-run">x</span>] run   |
+ | [<span class="check-test">x</span>] test  |
+ | [<span class="check-learn">x</span>] learn |
  '-----------'
       | |
      _| |_</pre>
+              </button>
               <span class="art-caption">make room for experiments</span>
             </div>
             <div class="work-copy">
-              <div class="eyebrow"><time datetime="2025-07">Jul 2025</time> &ndash; present</div>
+              <div class="eyebrow">Microsoft AI Development and Acceleration</div>
               <h3><a href="https://microsoft.ai/">Microsoft AI Development and Acceleration <span class="external-arrow" aria-hidden="true">&#8599;</span></a></h3>
               <p>Agent harnesses and evaluation tools for faster research iteration.</p>
-              <div class="work-links"><span>software engineer / post-training</span><span aria-hidden="true">/</span><a href="https://microsoft.ai/">MAI <span aria-hidden="true">&#8599;</span></a></div>
+              <div class="work-links">
+                <span><time datetime="2025-07">Jul 2025</time> &ndash; present</span><span aria-hidden="true">/</span>
+                <span>software engineer / infrastructure / evaluation / post-training</span>
+              </div>
             </div>
           </article>
 
           <article class="work-item" data-work="stashbird">
-            <div class="work-art bird-art" aria-hidden="true">
-              <span class="art-corner">02</span>
-              <pre>       .
-      /|
-  ___/ |
- / o   /__
- &gt;    ____/
-  \__/
-   / \   .</pre>
+            <div class="work-art bird-art">
+              <span class="art-corner" aria-hidden="true">02</span>
+              <button class="scene-trigger bird-trigger" type="button" data-scene-detail="bird" aria-label="Make the little bird blink and flap its wing" disabled>
+                <span class="bird-stage" aria-hidden="true">
+                  <pre>        .--.
+       / <span class="bird-eye"><span>o</span></span>  \&gt;
+   .--'     /
+  /        /
+ /___     /
+     \___/
+      | |
+      '-'-</pre>
+                  <pre class="bird-wing"> .-.
+/  /
+'--'</pre>
+                </span>
+              </button>
               <span class="art-caption">a little memory</span>
             </div>
             <div class="work-copy">
@@ -186,45 +209,77 @@
           </article>
 
           <article class="work-item" data-work="graphrag">
-            <div class="work-art graph-art" aria-hidden="true">
-              <span class="art-corner">03</span>
-              <pre>   o --- o
+            <div class="work-art graph-art">
+              <span class="art-corner" aria-hidden="true">03</span>
+              <button class="scene-trigger graph-trigger" type="button" data-scene-detail="graph" aria-label="Watch a graph connection get snipped, a node pruned, and dependencies rewired" disabled>
+                <span class="graph-stage" aria-hidden="true">
+                  <pre class="graph-frame graph-base" data-graph-phase="original">   o --- o
   / \     \
  o   o --- o
   \ / \   /
    o   o-o
     \ /
      o</pre>
+                  <pre class="graph-frame graph-cut" data-graph-phase="snip">   o  x  o
+  / \     \
+ o   o --- o
+  \ / \   /
+   o   o-o
+    \ /
+     o</pre>
+                  <pre class="graph-frame graph-pruned" data-graph-phase="prune">   o
+  / \
+ o   o --- o
+  \ / \   /
+   o   o-o
+    \ /
+     o</pre>
+                  <pre class="graph-frame graph-rewired" data-graph-phase="rewire">   o     o
+  / \    |
+ o   o --+-o
+  \ / \  |/
+   o   o-o
+    \ /
+     o</pre>
+                </span>
+              </button>
               <span class="art-caption">connecting the dots</span>
             </div>
             <div class="work-copy">
-              <div class="eyebrow">Microsoft Research / article <time datetime="2026-04">Apr 2026</time></div>
+              <div class="eyebrow">Microsoft Research</div>
               <h3><a href="https://medium.com/data-science-at-microsoft/graphrag-beyond-the-demo-lessons-from-the-trenches-add83180f849">GraphRAG for code <span class="external-arrow" aria-hidden="true">&#8599;</span></a></h3>
               <p>Bringing graph-based code retrieval into VS Code.</p>
-              <div class="work-links"><span>co-author</span><span aria-hidden="true">/</span><a href="https://medium.com/data-science-at-microsoft/graphrag-beyond-the-demo-lessons-from-the-trenches-add83180f849">read the field notes <span aria-hidden="true">&#8599;</span></a></div>
+              <div class="work-links">
+                <span>article <time datetime="2026-04">Apr 2026</time></span><span aria-hidden="true">/</span>
+                <span>co-author</span><span aria-hidden="true">/</span>
+                <a href="https://medium.com/data-science-at-microsoft/graphrag-beyond-the-demo-lessons-from-the-trenches-add83180f849">read the field notes <span aria-hidden="true">&#8599;</span></a>
+              </div>
             </div>
           </article>
 
           <article class="work-item" data-work="staccato">
-            <div class="work-art speech-art" aria-hidden="true">
-              <span class="art-corner">04</span>
-              <pre>    .---.
-    |:::|
-   (|:::|)
-    '---'
-      |
-   ___|___
- ~ . . . ~</pre>
+            <div class="work-art speech-art">
+              <span class="art-corner" aria-hidden="true">04</span>
+              <button class="scene-trigger speech-trigger" type="button" data-scene-detail="speech" aria-label="Send a stuttered speech pattern through the microphone" disabled>
+                <pre class="speech-mic" aria-hidden="true">  .---.
+  |:::|
+ (|:::|)
+  '---'
+    |
+ ___|___</pre>
+                <span class="speech-bars" aria-hidden="true"><span>| ||  | |   || |  |</span></span>
+              </button>
               <span class="art-caption">more ways to be heard</span>
             </div>
             <div class="work-copy">
-              <div class="eyebrow">hackathon <time datetime="2025-11">Nov 2025</time></div>
+              <div class="eyebrow">Microsoft Global Hackathon</div>
               <h3><a href="https://github.com/microsoft/Staccato-Stuttered-ASR">Staccato <span class="external-arrow" aria-hidden="true">&#8599;</span></a></h3>
               <p>Speech recognition designed to better understand people who stutter.</p>
               <p class="project-context">My brother stutters, so making speech technology more accessible is personal to me.</p>
               <p class="project-recognition"><a href="https://www.credly.com/badges/6e507446-96ac-45cc-89e7-e40440959f6c">Team 1st place &#183; Ability Hack Executive Challenge</a></p>
               <div class="work-links">
-                <span>Microsoft Global Hackathon, 2025</span><span aria-hidden="true">/</span>
+                <span>hackathon <time datetime="2025-11">Nov 2025</time></span><span aria-hidden="true">/</span>
+                <span>team member</span><span aria-hidden="true">/</span>
                 <a href="https://github.com/microsoft/Staccato-Stuttered-ASR">project code <span aria-hidden="true">&#8599;</span></a>
               </div>
             </div>
@@ -300,7 +355,7 @@
                 </a>
               </section>
             </div>
-      <div class="hearth" role="img" aria-label="A small ASCII fireplace with gently flickering flames.">
+      <div class="hearth" role="group" aria-label="A small ASCII fireplace with gently flickering flames.">
         <pre class="hearth-surround" aria-hidden="true">  _______________________________
  /_______________________________\
  |  [__] [__] [__] [__] [__] [__] |
@@ -310,6 +365,7 @@
  | [__] |                 | [__] |
  |______|_________________|______|
  /_______________________________\</pre>
+        <button class="scene-trigger ember-trigger" type="button" data-scene-detail="embers" aria-label="Stir a few fireplace embers" disabled><span class="hearth-embers" aria-hidden="true"><i>.</i><i>'</i></span></button>
         <div class="hearth-fire" aria-hidden="true">
           <pre class="hearth-frame hearth-frame-one">     (  )
   (  ) /(
