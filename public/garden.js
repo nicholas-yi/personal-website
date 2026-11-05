@@ -120,7 +120,9 @@ function measureText() {
   const water = puddles.measure(viewportRect(sceneGeometry.water));
   rain.groundY = water && water.top < innerHeight ? water.top + 55 : rain.height + 16;
   const fireplace = viewportRect(sceneGeometry.fireplace);
-  fireplaceAmount = fireplaceProximity(fireplace, innerHeight, Math.max(0, document.documentElement.scrollHeight - innerHeight - scrollY));
+  fireplaceAmount = fireplace
+    ? fireplaceProximity(fireplace, innerHeight, Math.max(0, document.documentElement.scrollHeight - innerHeight - scrollY))
+    : 0;
   audio?.fireplace(fireplaceAmount);
   textNeedsUpdate = false;
 }

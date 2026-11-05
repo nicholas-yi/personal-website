@@ -101,7 +101,6 @@ export function installHeaderGlass(doc) {
   const header = doc.querySelector(".site-header");
   if (!header) return;
   const view = doc.defaultView;
-  const reduced = view.matchMedia("(prefers-reduced-motion: reduce)");
   const forced = view.matchMedia("(forced-colors: active)");
   const canvas = doc.createElement("canvas");
   const texture = doc.createElement("canvas");
@@ -121,10 +120,11 @@ export function installHeaderGlass(doc) {
   let inputBounds = null;
   let frame = 0;
   let nextFrame = 0;
+  let expiresAt = 0;
   let width = 0;
   let height = 0;
   let scale = 1;
-  const active = () => !doc.hidden && !reduced.matches && !forced.matches && doc.documentElement.dataset.rain !== "still";
+  const active = () => !doc.hidden && !forced.matches;
 
   function draw(now) {
     context.clearRect(0, 0, width, height);
@@ -142,7 +142,7 @@ export function installHeaderGlass(doc) {
   function animate(now) {
     frame = 0;
     if (!active()) return;
-    if (now >= nextFrame) {
+    if (now >= nextFrame || now >= expiresAt) {
       draw(now);
       nextFrame = now + FRAME_INTERVAL;
     }
@@ -154,6 +154,7 @@ export function installHeaderGlass(doc) {
     view.cancelAnimationFrame(frame);
     frame = 0;
     nextFrame = 0;
+    expiresAt = 0;
     if (field) {
       field.clarity.fill(0);
       field.time.fill(0);
@@ -168,6 +169,7 @@ export function installHeaderGlass(doc) {
     const bounds = header.getBoundingClientRect();
     const density = Math.min(view.devicePixelRatio || 1, 1.5);
     if (force !== true && width === bounds.width && height === bounds.height && scale === density) return;
+    const geometryChanged = width !== bounds.width || height !== bounds.height;
     width = bounds.width;
     height = bounds.height;
     scale = density;
@@ -179,10 +181,12 @@ export function installHeaderGlass(doc) {
     }
     context.setTransform(scale, 0, 0, scale, 0, 0);
     frost.setTransform(scale, 0, 0, scale, 0, 0);
-    field = createGlassField(width, height, Math.max(32, height * 0.56) * 1.5 / 2);
-    mask.width = field.width;
-    mask.height = field.height;
-    pixels = maskContext.createImageData(field.width, field.height);
+    if (geometryChanged) {
+      field = createGlassField(width, height, Math.max(32, height * 0.56) * 1.5 / 2);
+      mask.width = field.width;
+      mask.height = field.height;
+      pixels = maskContext.createImageData(field.width, field.height);
+    }
     frost.clearRect(0, 0, width, height);
     const palette = view.getComputedStyle(doc.documentElement);
     const fog = palette.getPropertyValue("--glass-fog-rgb").trim();
@@ -208,7 +212,8 @@ export function installHeaderGlass(doc) {
       frost.arc(x - radius * 0.25, y - radius * 0.35, Math.max(0.35, radius * 0.35), 0, Math.PI * 2);
       frost.fill();
     }
-    clear();
+    if (geometryChanged) clear();
+    else draw(view.performance.now());
   }
 
   function mark(event) {
@@ -220,7 +225,9 @@ export function installHeaderGlass(doc) {
     for (const sample of samples) {
       const point = { x: sample.clientX - inputBounds.left, y: sample.clientY - inputBounds.top, time };
       if (point.x < 0 || point.x > width || point.y < 0 || point.y > height) { lastPoint = null; continue; }
-      if (lastPoint) paintGlassSegment(field, lastPoint, point, time);
+      if (lastPoint && paintGlassSegment(field, lastPoint, point, time)) {
+        expiresAt = time + GLASS_MARK_LIFETIME;
+      }
       lastPoint = point;
     }
     if (field.active && !frame) frame = view.requestAnimationFrame(animate);
@@ -237,11 +244,7 @@ export function installHeaderGlass(doc) {
   view.addEventListener("scroll", () => { lastPoint = null; inputBounds = null; }, { passive: true });
   view.addEventListener("themechange", () => resize(true));
   doc.addEventListener("visibilitychange", clear);
-  reduced.addEventListener("change", clear);
   forced.addEventListener("change", clear);
-  new view.MutationObserver(() => { if (!active()) clear(); }).observe(doc.documentElement, {
-    attributes: true, attributeFilter: ["data-rain"],
-  });
   new view.ResizeObserver(resize).observe(header);
   header.prepend(canvas);
   resize();

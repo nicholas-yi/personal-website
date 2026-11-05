@@ -6,8 +6,7 @@ import { runInNewContext } from "node:vm";
 const source = await readFile(new URL("../public/theme.js", import.meta.url), "utf8");
 const key = "nicholas-yi:theme";
 
-function fixture(saved = null, denied = false) {
-  const values = new Map(saved === null ? [] : [[key, saved]]);
+function fixture(saved = null, denied = false, values = new Map(saved === null ? [] : [[key, saved]])) {
   const doc = new EventTarget();
   doc.readyState = "loading";
   doc.documentElement = { dataset: {} };
@@ -24,11 +23,14 @@ function fixture(saved = null, denied = false) {
     return selector === "#theme-toggle" ? button : selector === "#garden-status" ? status : null;
   };
   const view = new EventTarget();
-  Object.defineProperty(view, "localStorage", {
+  Object.defineProperty(view, "sessionStorage", {
     get() {
       if (denied) throw new Error("Storage denied");
       return { getItem: name => values.get(name) ?? null, setItem: (name, value) => values.set(name, value) };
     },
+  });
+  Object.defineProperty(view, "localStorage", {
+    get() { throw new Error("Old cross-visit palette storage must not be accessed."); },
   });
   const warnings = [];
   let changes = 0;
@@ -41,7 +43,7 @@ function fixture(saved = null, denied = false) {
   };
 }
 
-test("saved lamplight is applied in the head before controls or page content are ready", () => {
+test("the current visit's lamplight is applied in the head before controls or page content are ready", () => {
   const f = fixture("lamplight");
   assert.equal(f.doc.documentElement.dataset.theme, "lamplight");
   assert.equal(f.meta.content, "#24231f");
@@ -53,7 +55,7 @@ test("saved lamplight is applied in the head before controls or page content are
   assert.equal(f.doc.documentElement.dataset.themeReady, "true");
 });
 
-test("daylight remains the default; explicit toggles persist only the theme and emit one palette event", () => {
+test("a fresh visit defaults to daylight; explicit toggles persist only the theme and emit one palette event", () => {
   const f = fixture();
   assert.equal(f.doc.documentElement.dataset.theme, "daylight");
   assert.equal(f.values.size, 0);
@@ -81,18 +83,30 @@ test("denied or invalid storage is announced and does not prevent switching pale
   }
 });
 
-test("another tab's explicit palette choice is synchronized without following unrelated settings", () => {
-  const f = fixture("daylight");
+test("lamp choice persists across pages and reloads in one visit but never enables a new visit's lamp", () => {
+  const first = fixture();
+  first.ready();
+  first.button.dispatchEvent(new Event("click"));
+  const nextPage = fixture(null, false, first.values);
+  nextPage.ready();
+  assert.equal(nextPage.doc.documentElement.dataset.theme, "lamplight");
+  assert.equal(nextPage.attributes.get("aria-pressed"), "true");
+  assert.equal(fixture(null, false, first.values).doc.documentElement.dataset.theme, "lamplight");
+  const newVisit = fixture();
+  newVisit.ready();
+  assert.equal(newVisit.doc.documentElement.dataset.theme, "daylight");
+  assert.equal(newVisit.attributes.get("aria-pressed"), "false");
+  assert.equal(newVisit.meta.content, "#f8f7f2");
+  assert.equal(newVisit.warnings.length, 0);
+});
+
+test("a previous visit's local-storage change does not switch the current visit's palette", () => {
+  const f = fixture();
   f.ready();
-  f.view.dispatchEvent(Object.assign(new Event("storage"), { key: "unrelated", newValue: "lamplight" }));
-  assert.equal(f.doc.documentElement.dataset.theme, "daylight");
   f.view.dispatchEvent(Object.assign(new Event("storage"), { key, newValue: "lamplight" }));
-  assert.equal(f.doc.documentElement.dataset.theme, "lamplight");
-  f.view.dispatchEvent(Object.assign(new Event("storage"), { key, newValue: "invalid" }));
-  assert.equal(f.doc.documentElement.dataset.theme, "lamplight");
-  assert.equal(f.warnings.length, 1);
-  f.view.dispatchEvent(Object.assign(new Event("storage"), { key, newValue: null }));
   assert.equal(f.doc.documentElement.dataset.theme, "daylight");
+  assert.equal(f.attributes.get("aria-pressed"), "false");
+  assert.equal(f.warnings.length, 0);
 });
 
 test("BFCache restoration re-reads the manual setting without generating redundant recolor events", () => {

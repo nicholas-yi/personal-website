@@ -148,7 +148,7 @@ h3 a:is(:hover, :focus-visible) .external-arrow, .social-links a:is(:hover, :foc
 .work-story > summary:focus-visible { outline: 2px solid var(--green); outline-offset: 4px; border-radius: 2px; }
 .work-story[open] > summary { border-bottom: 1px solid var(--line); }
 .story-copy { max-width: 65ch; margin: 24px 0 12px; color: #5d6457; font-size: 16px; line-height: 1.85; overflow-wrap: anywhere; }
-.story-copy h3, .story-copy h4 { margin: 28px 0 12px; color: var(--ink); font: 22px/1.4 var(--serif); letter-spacing: -0.3px; }
+.story-copy h2, .story-copy h3, .story-copy h4 { margin: 28px 0 12px; color: var(--ink); font: 22px/1.4 var(--serif); letter-spacing: -0.3px; }
 .story-copy > p + p { margin-top: 16px; }
 .story-copy .story-related { margin-top: 24px; }
 .story-copy .story-sources { margin-top: 16px; color: var(--muted); font-size: 14px; }

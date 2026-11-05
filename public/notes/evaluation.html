@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f8f7f2">
+    <meta name="description" content="Nicholas Yi on trustworthy agent evaluations: distinguish system failures from unfinished runs, preserve experimental context, and test what a score actually establishes.">
+    <title>What makes an evaluation trustworthy? - Nicholas Yi</title>
+    <link rel="canonical" href="https://nicholasyi.me/notes/evaluation">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Nicholas Yi">
+    <meta property="og:title" content="What makes an evaluation trustworthy? - Nicholas Yi">
+    <meta property="og:description" content="On the distance between a reassuring number and a result worth trusting. A field note by Nicholas Yi.">
+    <meta property="og:url" content="https://nicholasyi.me/notes/evaluation">
+    <meta property="og:image" content="https://nicholasyi.me/social-card.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Nicholas Yi. Building things that learn, remember, and work. An ASCII house shelters a small fireplace.">
+    <meta property="article:author" content="https://nicholasyi.me/about">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://nicholasyi.me/social-card.png">
+    <meta name="twitter:image:alt" content="Nicholas Yi. Building things that learn, remember, and work. An ASCII house shelters a small fireplace.">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23f8f7f2'/%3E%3Ctext x='32' y='47' text-anchor='middle' font-family='monospace' font-size='54' fill='%235b6844'%3E*%3C/text%3E%3C/svg%3E">
+    <script src="/theme.js"></script>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/theme.css">
+    <script type="module" src="/garden.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <canvas id="garden" aria-hidden="true"></canvas>
+    <div class="page">
+      <header class="site-header">
+        <a class="home-link" href="/index.html" aria-label="Nicholas Yi, home"><span class="home-mark" aria-hidden="true">*</span> ny</a>
+        <nav aria-label="Main navigation">
+          <a href="/index.html#work">work</a>
+          <a href="/index.html#play">play</a>
+          <a href="/about.html">about</a>
+          <a href="/links.html">links</a>
+        </nav>
+      </header>
+      <main id="main" class="links-main" tabindex="-1">
+        <article aria-labelledby="note-heading">
+          <p class="eyebrow">field note / <a href="/about">Nicholas Yi</a></p>
+          <h1 id="note-heading">What makes an evaluation trustworthy?</h1>
+          <p class="links-intro">On the distance between a reassuring number and a result worth trusting.</p>
+          <div class="story-copy">
+            <p>It is easy to want a number to settle a question. Especially a question as open-ended as whether an agent is getting better. A higher score gives the work somewhere to land, something to compare, something that looks like progress.</p>
+            <p>And I do want that comparison. I just want to understand what the number is carrying with it.</p>
+
+            <h2>What actually happened?</h2>
+            <p>An incorrect answer, an unfinished ingestion run, and a judge that never returned a usable grade can all leave an experiment without the result we hoped for. They do not tell the same story. One may reveal a limitation in the system; another may tell us that we have not really tested it yet.</p>
+            <p>Keeping that distinction does not mean making the inconvenient attempts disappear. I want the failed runs to remain visible, with enough evidence to say where they stopped and what was (or was not) measured. There is something misleading about a clean comparison that became clean only after its complications were removed.</p>
+
+            <p>Isolation, stage-level telemetry, and recoverable runs help preserve that context. So do the inputs, the configuration, and an explanation of what was held fixed. If both the system and the setup changed, repeating the experiment will not, on its own, tell us which change mattered.</p>
+
+            <h2>What did the test ask?</h2>
+            <p>Memory makes this especially concrete. An agent can recall a fact correctly and still mishandle a later correction. A deleted source can leave information behind in a searchable summary. Stashbird's public evaluation keeps question answering separate from its update and deletion studies, because the ability to answer does not establish that the underlying state has been revised correctly.</p>
+            <p>I think of a result as a little piece of understanding, with boundaries around it. What did it establish, under which conditions, and what question remains? I would rather leave those boundaries visible than ask a single number to stand in for all of them.</p>
+            <p class="story-related">The memory example: <a href="/links#stashbird-case-study">When a conversation changes</a>.</p>
+            <p class="story-sources">Example and experimental setup: <a href="https://arxiv.org/html/2609.34242v2#S3">Stashbird's published experiments</a>.</p>
+          </div>
+          <p class="more-links"><a href="/links#evaluation-field-note">&#8592; back to the field notes</a></p>
+        </article>
+      </main>
+      <footer class="site-footer">
+        <a class="footer-name" href="/index.html">nicholas yi</a>
+        <span>made for a quieter corner of the web.</span>
+        <a href="#main">back to top <span aria-hidden="true">&#8593;</span></a>
+      </footer>
+    </div>
+    <div class="page-puddles" aria-hidden="true"><pre>   .:~:..             ..:~:.
+ .:~~~~~:.          .:~~~~~:.
+   ':::'              ':::'</pre><canvas></canvas></div>
+    <aside class="garden-controls" aria-label="Atmosphere settings" hidden>
+      <button id="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to lamplight" title="Switch to lamplight" hidden>
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" aria-hidden="true"><g class="theme-lamp"><path d="M7 3h6l3 8H4l3-8Zm3 8v6m-4 0h8M5 13l-1 2m11-2 1 2"/></g><g class="theme-daylight"><circle cx="10" cy="10" r="3"/><path d="M10 1v2m0 14v2M1 10h2m14 0h2M3.6 3.6 5 5m10 10 1.4 1.4M3.6 16.4 5 15M15 5l1.4-1.4"/></g></svg>
+      </button>
+      <span class="control-divider" aria-hidden="true"></span>
+      <button id="motion-toggle" type="button" aria-pressed="false" aria-label="Enable rain animation" title="Enable rain animation"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" aria-hidden="true"><path d="M5 10a3 3 0 1 1 1-5 4 4 0 0 1 8 1 2.5 2.5 0 0 1 1 5H5m1 2-1 3m5-3-1 4m5-4-1 3"/><path class="control-off" d="m3 3 14 14"/></svg><span id="motion-label" class="sr-only">rain paused</span></button>
+      <span class="control-divider" aria-hidden="true"></span>
+      <button id="sound-toggle" type="button" aria-pressed="false" aria-label="Enable sound" title="Enable sound"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.25" aria-hidden="true"><path d="M8 6 5 8H2v4h3l3 2V6Z"/><path class="sound-waves" d="M11 7a5 5 0 0 1 0 6m3-9a9 9 0 0 1 0 12"/><path class="sound-muted" d="m3 3 14 14"/></svg><span id="sound-label" class="sr-only">sound off</span></button>
+    </aside>
+    <p class="garden-status" id="garden-status" role="status" aria-live="polite"></p>
+  </body>
+</html>

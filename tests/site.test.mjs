@@ -75,7 +75,7 @@ test("the reading experience and keyboard skip target don't depend on JavaScript
 });
 
 test("sound defaults off with a crossed-out speaker and starts only through its own control", async () => {
-  for (const path of ["/", "/about.html", "/links.html", "/404.html"]) {
+  for (const path of ["/", "/about.html", "/links.html", "/notes/evaluation", "/404.html"]) {
     const html = await (await fetch(`${origin}${path}`)).text();
     assert.ok(html.includes('<button id="sound-toggle" type="button" aria-pressed="false" aria-label="Enable sound" title="Enable sound"'));
     assert.ok(html.includes('<span id="sound-label" class="sr-only">sound off</span>'));
@@ -120,7 +120,7 @@ test("rain preferences are visit-scoped and writing/mail copy tools are native p
 });
 
 test("all pages restore a manual palette before CSS and provide an independent accessible lamp toggle", async () => {
-  for (const path of ["/", "/about.html", "/links.html", "/404.html"]) {
+  for (const path of ["/", "/about.html", "/links.html", "/notes/evaluation", "/404.html"]) {
     const html = await (await fetch(`${origin}${path}`)).text();
     assert.match(html, /<script src="\/?theme\.js"><\/script>/);
     assert.ok(html.indexOf("theme.js") < html.indexOf("styles.css"));
@@ -134,7 +134,7 @@ test("all pages restore a manual palette before CSS and provide an independent a
     assert.match(asset.headers.get("content-type"), mime);
   }
   const script = await (await fetch(`${origin}/theme.js`)).text();
-  assert.ok(script.includes("localStorage") && !script.includes("sessionStorage"));
+  assert.ok(script.includes("sessionStorage") && !script.includes("localStorage"));
   assert.ok(!script.includes("matchMedia") && !script.includes("setInterval") && !script.includes("AudioContext"));
   const css = await (await fetch(`${origin}/theme.css`)).text();
   assert.ok(css.includes("@media screen and (forced-colors: none)"));
@@ -211,7 +211,7 @@ test("ASCII companion decorations are original, noninteractive, motion-gated, an
 });
 
 test("all pages use the same simple navigation without the removed notes destination", async () => {
-  for (const path of ["/", "/links.html", "/about.html"]) {
+  for (const path of ["/", "/links.html", "/about.html", "/notes/evaluation"]) {
     const html = await (await fetch(`${origin}${path}`)).text();
     const nav = html.match(/<nav aria-label="Main navigation">([\s\S]*?)<\/nav>/)[1];
     assert.deepEqual([...nav.matchAll(/<a\b[^>]*>([^<]+)<\/a>/g)].map((match) => match[1]), ["work", "play", "about", "links"]);
@@ -228,7 +228,7 @@ test("all pages use the same simple navigation without the removed notes destina
 });
 
 test("all pages end with document-bottom ASCII puddles and accessible icon-only weather controls", async () => {
-  for (const path of ["/", "/about.html", "/links.html", "/404.html"]) {
+  for (const path of ["/", "/about.html", "/links.html", "/notes/evaluation", "/404.html"]) {
     const html = await (await fetch(`${origin}${path}`)).text();
     assert.ok(html.includes('class="page-puddles" aria-hidden="true"'));
     assert.ok(html.indexOf('class="page-puddles"') > html.indexOf("</footer>"));
@@ -673,6 +673,19 @@ test("the about house has picture-frame, fireplace, and flower furniture in the 
   assert.ok(graph.includes('actions.append(undo, redo, clear)'));
 });
 
+test("About keeps a single static portrait without bookshelf or carousel previews", async () => {
+  const html = await (await fetch(`${origin}/about`)).text();
+  assert.equal((html.match(/class="picture-photo"/g) ?? []).length, 1);
+  assert.ok(html.includes("<figcaption>a moment, framed.</figcaption>"));
+  assert.doesNotMatch(html, /bookshelf|shelf-book|data-picture-|picture-controls|picture-postcard/);
+  const module = await fetch(`${origin}/about-room.js`);
+  assert.equal(module.status, 404);
+  const garden = await (await fetch(`${origin}/garden.js`)).text();
+  assert.doesNotMatch(garden, /installAboutRoom|about-room\.js/);
+  const css = await (await fetch(`${origin}/styles.css`)).text();
+  assert.doesNotMatch(css, /bookshelf|shelf-book|picture-swivel|picture-controls|picture-postcard/);
+});
+
 test("Cantor is mentioned without linking or publishing the supplied essay", async () => {
   const html = await (await fetch(`${origin}/about.html`)).text();
   assert.ok(html.includes("my archival art volunteering at stanford's cantor arts center,"));
@@ -767,7 +780,7 @@ test("the listening card is an accessible optional disclosure, not a credential-
 });
 
 test("sharing metadata uses canonical production URLs and a genuine 1200-by-630 PNG", async () => {
-  for (const [path, canonical] of [["/", ""], ["/about.html", "about"], ["/links.html", "links"]]) {
+  for (const [path, canonical] of [["/", ""], ["/about.html", "about"], ["/links.html", "links"], ["/notes/evaluation", "notes/evaluation"]]) {
     const html = await (await fetch(`${origin}${path}`)).text();
     assert.ok(html.includes(`rel="canonical" href="https://nicholasyi.me/${canonical}"`));
     assert.ok(html.includes(`property="og:url" content="https://nicholasyi.me/${canonical}"`));
@@ -851,7 +864,8 @@ test("case study and field note are native collapsed disclosures on Links, not e
   assert.ok(html.includes('href="#evaluation-field-note"'));
   assert.ok(html.includes('href="#stashbird-case-study"'));
   assert.ok(html.includes('href="https://arxiv.org/html/2609.34242v2"'));
-  assert.ok(html.includes('href="https://arxiv.org/html/2609.34242v2#S3"'));
+  const note = await (await fetch(`${origin}/notes/evaluation`)).text();
+  assert.ok(note.includes('href="https://arxiv.org/html/2609.34242v2#S3"'));
   assert.ok(!html.includes("rotation"));
   assert.ok(html.includes("I co-authored Stashbird."));
   assert.ok(html.includes("owning evaluation across memory systems and benchmarks"));
@@ -880,7 +894,8 @@ test("education is a compact accurate About block, never a new homepage section"
 test("reflective writing drops the template headings while retaining evidence and contribution boundaries", async () => {
   const html = await (await fetch(`${origin}/links.html`)).text();
   const stories = [...html.matchAll(/<details class="work-story" id="[^"]+">([\s\S]*?)<\/details>/g)].map(match => match[1]);
-  const text = stories.join(" ");
+  const note = await (await fetch(`${origin}/notes/evaluation`)).text();
+  const text = `${stories.join(" ")} ${note}`;
   assert.ok(text.includes("remember what I said, but also notice when I no longer mean it"));
   assert.ok(text.includes("what was (or was not) measured"));
   assert.ok(text.includes("I co-authored Stashbird."));
@@ -890,4 +905,123 @@ test("reflective writing drops the template headings while retaining evidence an
   }
   assert.ok(!text.includes("product rollout") && !text.includes("unpublished result"));
   assert.ok(!text.includes("Once We Were Us") && !text.includes("Chungking Express"));
+});
+
+test("homepage metadata adds professional context and the public identities use matching link styles", async () => {
+  const home = await (await fetch(origin)).text();
+  assert.ok(home.includes("<title>Nicholas Yi &mdash; Software Engineer at Microsoft AI</title>"));
+  assert.ok(home.includes('property="og:title" content="Nicholas Yi &mdash; Software Engineer at Microsoft AI"'));
+  assert.ok(home.includes('Building things that learn,<br class="desktop-break"> remember, and work.'));
+  assert.ok(home.includes("I'm interested in how agents remember, how we know they're getting better, and what it takes to make research useful in the real world."));
+  for (const path of ["/", "/links"]) {
+    const html = await (await fetch(`${origin}${path}`)).text();
+    const socials = html.match(/<ul class="social-links"[\s\S]*?<\/ul>/)[0];
+    assert.ok(socials.includes('href="https://www.linkedin.com/in/nicholasyiofficial/"'));
+    assert.ok(socials.includes('href="https://github.com/nicholas-yi">github <span aria-hidden="true">&#8599;</span>'));
+    assert.ok(socials.indexOf("linkedin") < socials.indexOf("github"));
+  }
+});
+
+test("About exposes a truthful ProfilePage with one stable Person identity and no invented statistics", async () => {
+  const html = await (await fetch(`${origin}/about`)).text();
+  const scripts = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)];
+  assert.equal(scripts.length, 1);
+  const schema = JSON.parse(scripts[0][1]);
+  assert.deepEqual(schema, {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    "@id": "https://nicholasyi.me/about#profile",
+    url: "https://nicholasyi.me/about",
+    mainEntity: {
+      "@type": "Person",
+      "@id": "https://nicholasyi.me/#nicholas-yi",
+      name: "Nicholas Yi",
+      url: "https://nicholasyi.me/",
+      image: "https://nicholasyi.me/about-photo.jpg",
+      sameAs: ["https://www.linkedin.com/in/nicholasyiofficial/", "https://github.com/nicholas-yi"],
+    },
+  });
+  assert.ok(html.includes('alt="Nicholas Yi."'));
+  assert.equal((await fetch(`${origin}/about-photo.jpg`)).status, 200);
+});
+
+test("the sitemap lists only unique successful canonical pages and robots advertises it", async () => {
+  const response = await fetch(`${origin}/sitemap.xml`);
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("content-type"), "application/xml; charset=utf-8");
+  const xml = await response.text();
+  assert.match(xml, /^<\?xml version="1\.0" encoding="UTF-8"\?>\s*<urlset xmlns="http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9">[\s\S]*<\/urlset>\s*$/);
+  const locations = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]);
+  assert.deepEqual(locations, [
+    "https://nicholasyi.me/",
+    "https://nicholasyi.me/about",
+    "https://nicholasyi.me/links",
+    "https://nicholasyi.me/notes/evaluation",
+  ]);
+  assert.equal(new Set(locations).size, locations.length);
+  assert.equal((xml.match(/<url>/g) ?? []).length, locations.length);
+  assert.doesNotMatch(xml, /\.html|404|<lastmod>|<priority>|<changefreq>|127\.0\.0\.1/);
+  for (const location of locations) {
+    const url = new URL(location);
+    assert.equal(url.hash, "");
+    assert.equal(url.search, "");
+    const page = await fetch(`${origin}${url.pathname}`);
+    assert.equal(page.status, 200);
+    const html = await page.text();
+    assert.ok(html.includes(`rel="canonical" href="${location}"`));
+    assert.doesNotMatch(html, /<meta name="robots" content="[^"]*noindex/);
+  }
+  const robots = await fetch(`${origin}/robots.txt`);
+  assert.equal(robots.status, 200);
+  assert.equal(robots.headers.get("content-type"), "text/plain; charset=utf-8");
+  assert.deepEqual((await robots.text()).trim().split(/\r?\n/).filter(Boolean), [
+    "User-agent: *", "Allow: /", "Sitemap: https://nicholasyi.me/sitemap.xml",
+  ]);
+  for (const path of ["/sitemap.xml", "/robots.txt"]) {
+    const get = await fetch(`${origin}${path}`);
+    const head = await fetch(`${origin}${path}`, { method: "HEAD" });
+    assert.equal(head.status, 200);
+    assert.equal(head.headers.get("content-type"), get.headers.get("content-type"));
+    assert.equal(Number(head.headers.get("content-length")), Buffer.byteLength(await get.text()));
+    assert.equal(await head.text(), "");
+  }
+});
+
+test("the standalone evaluation note is readable without script and keeps nested routes and legacy entries working", async () => {
+  const response = await fetch(`${origin}/notes/evaluation`);
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-type"), /text\/html/);
+  const html = await response.text();
+  assert.ok(html.includes('<h1 id="note-heading">What makes an evaluation trustworthy?</h1>'));
+  assert.ok(html.includes('article aria-labelledby="note-heading"'));
+  assert.ok(html.includes('href="/about">Nicholas Yi</a>'));
+  assert.ok(html.includes("<h2>What actually happened?</h2>"));
+  assert.ok(html.includes("<h2>What did the test ask?</h2>"));
+  assert.ok(html.includes("Keeping that distinction does not mean making the inconvenient attempts disappear."));
+  assert.ok(html.includes("the ability to answer does not establish that the underlying state has been revised correctly."));
+  assert.ok(html.includes('href="/links#stashbird-case-study"'));
+  assert.ok(html.includes('href="/links#evaluation-field-note"'));
+  assert.ok(html.includes('href="https://arxiv.org/html/2609.34242v2#S3"'));
+  assert.doesNotMatch(html, /<details|autoplay|bookshelf|data-picture-/);
+  assert.ok(!html.includes('class="hearth"'));
+  const garden = await (await fetch(`${origin}/garden.js`)).text();
+  assert.match(garden, /fireplaceAmount = fireplace\s*\? fireplaceProximity\([^\n]+\)\s*: 0;/);
+  for (const match of html.matchAll(/(?:src|href)="([^"]+)"/g)) {
+    const target = match[1];
+    if (/^(?:https?:|data:|#)/.test(target)) continue;
+    assert.ok(target.startsWith("/"), `Nested note asset/link must be root-relative: ${target}`);
+    assert.equal((await fetch(new URL(target, `${origin}/notes/evaluation`))).status, 200);
+  }
+  const alias = await fetch(`${origin}/notes/evaluation.html`);
+  assert.equal(alias.status, 200);
+  assert.equal(await alias.text(), html);
+  const head = await fetch(`${origin}/notes/evaluation`, { method: "HEAD" });
+  assert.equal(head.status, 200);
+  assert.equal(await head.text(), "");
+  const links = await (await fetch(`${origin}/links#evaluation-field-note`)).text();
+  const entry = links.match(/<details class="work-story" id="evaluation-field-note">([\s\S]*?)<\/details>/)[1];
+  assert.ok(entry.includes('data-copy-note="evaluation-field-note"'));
+  assert.ok(entry.includes('href="/notes/evaluation"'));
+  assert.ok(entry.includes("It is easy to want a number to settle a question."));
+  assert.ok(!entry.includes("What actually happened?"));
 });

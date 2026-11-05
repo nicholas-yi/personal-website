@@ -13,7 +13,7 @@
 
   function read() {
     try {
-      const saved = window.localStorage.getItem(key);
+      const saved = window.sessionStorage.getItem(key);
       if (saved !== null && saved !== "daylight" && saved !== "lamplight") throw new Error("The saved palette is invalid.");
       return saved ?? "daylight";
     } catch (error) {
@@ -49,19 +49,11 @@
       const palette = root.dataset.theme === "lamplight" ? "daylight" : "lamplight";
       apply(palette);
       try {
-        window.localStorage.setItem(key, palette);
+        window.sessionStorage.setItem(key, palette);
       } catch (error) { report(error); }
     });
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", install, { once: true });
   else install();
   window.addEventListener("pageshow", event => { if (event.persisted) apply(read()); });
-  window.addEventListener("storage", event => {
-    if (event.key !== key) return;
-    if (event.newValue !== null && !["daylight", "lamplight"].includes(event.newValue)) {
-      report(new Error("The saved palette is invalid."));
-      return;
-    }
-    apply(event.newValue ?? "daylight");
-  });
 })();

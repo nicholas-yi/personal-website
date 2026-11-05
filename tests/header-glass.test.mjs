@@ -239,6 +239,23 @@ test("theme changes recolor cached fog once without restarting a paused wipe", (
   assert.equal(f.draws(), 2);
 });
 
+test("changing lamp palette preserves a wipe's original timestamps and remaining lifetime", () => {
+  const f = fixture();
+  f.pointer("pointermove");
+  f.pointer("pointermove", { clientX: 180 });
+  f.step(0);
+  const pixels = f.contexts[2].calls.at(-1).args[0].data;
+  f.setTime(4400);
+  f.colors["--glass-fog-rgb"] = "58, 51, 40";
+  f.view.dispatchEvent(new Event("themechange"));
+  assert.equal(f.contexts[2].calls.at(-1).args[0].data, pixels);
+  assert.ok(pixels[(20 * 450 + 65) * 4 + 3] > 0);
+  assert.equal(f.frames.size, 1);
+  f.step(GLASS_MARK_LIFETIME);
+  assert.equal(pixels[(20 * 450 + 65) * 4 + 3], 0);
+  assert.equal(f.frames.size, 0);
+});
+
 test("pointer bursts schedule one frame and remisting stops completely when settled", () => {
   const f = fixture();
   for (let index = 0; index < 50; index++) f.pointer("pointermove", { clientX: 100 + index * 2 });
@@ -265,11 +282,9 @@ test("clearing extends behind navigation instead of reserving blocking fog recta
   assert.ok(f.contexts[2].calls.some(call => call.name === "putImageData"));
 });
 
-test("reduced motion, paused rain, hidden tabs, forced colors and blur cancel transient work", () => {
+test("hidden tabs, forced colors, blur and pointer cancellation stop transient work", () => {
   for (const stop of [
-    f => { f.reduced.matches = true; f.reduced.dispatchEvent(new Event("change")); },
     f => { f.forced.matches = true; f.forced.dispatchEvent(new Event("change")); },
-    f => { f.doc.documentElement.dataset.rain = "still"; f.observers.motion(); },
     f => { f.doc.hidden = true; f.doc.dispatchEvent(new Event("visibilitychange")); },
     f => f.view.dispatchEvent(new Event("blur")),
     f => f.pointer("pointercancel"),
@@ -282,11 +297,34 @@ test("reduced motion, paused rain, hidden tabs, forced colors and blur cancel tr
     stop(f);
     assert.equal(f.frames.size, 0);
   }
-  const f = fixture();
-  f.reduced.matches = true;
-  f.pointer("pointermove");
-  f.pointer("pointerdown");
-  assert.equal(f.frames.size, 0);
+});
+
+test("manual wiping and the full 8.8-second refog work with every atmosphere setting and reduced motion", () => {
+  for (const rain of ["still", "moving"]) {
+    for (const theme of ["daylight", "lamplight"]) {
+      for (const sound of ["off", "on"]) {
+        const f = fixture();
+        Object.assign(f.doc.documentElement.dataset, { rain, theme, sound });
+        f.reduced.matches = true;
+        f.pointer("pointermove");
+        f.pointer("pointermove", { clientX: 180 });
+        f.step(0);
+        const pixels = f.contexts[2].calls.at(-1).args[0].data;
+        const alpha = () => pixels[(20 * 450 + 65) * 4 + 3];
+        assert.ok(alpha() / 255 > 0.95);
+        f.doc.documentElement.dataset.rain = rain === "still" ? "moving" : "still";
+        f.reduced.dispatchEvent(new Event("change"));
+        assert.equal(f.frames.size, 1);
+        f.step(4400);
+        assert.ok(alpha() > 0 && alpha() < 248);
+        f.step(GLASS_MARK_LIFETIME - 25);
+        assert.equal(f.frames.size, 1);
+        f.step(GLASS_MARK_LIFETIME);
+        assert.equal(alpha(), 0);
+        assert.equal(f.frames.size, 0);
+      }
+    }
+  }
 });
 
 test("one isolated sample does not make a dot or leave an invisible animation loop running", () => {
