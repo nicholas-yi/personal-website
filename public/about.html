@@ -93,8 +93,8 @@
                 <span>I seek to understand the outside world</span>
                 <span>one different lens,</span>
                 <span>or neural layer,</span>
-                <span>at a time</span></p>
-              <p>If any of those are your thing, <a href="mailto:nicholasyiofficial@gmail.com">say hello <span aria-hidden="true">&#8599;</span></a>.</p>
+                <span>at a time.</span></p>
+              <p>if any of those are your thing, <a href="mailto:nicholasyiofficial@gmail.com">say hello <span aria-hidden="true">&#8599;</span></a>.</p>
             </div>
             <p class="about-education">
               <a href="https://www.cmu.edu/">Carnegie Mellon University</a> <span class="education-years">2021&ndash;2025</span>
@@ -118,6 +118,38 @@
 | '----------------' |
 '--------------------'</pre>
                   <img class="picture-photo" src="about-photo.jpg" width="384" height="759" loading="lazy" decoding="async" alt="Nicholas Yi.">
+                  <button class="scene-trigger portrait-trigger" type="button" data-scene-detail="portrait" aria-label="Catch a little light on the portrait glass" disabled>
+                    <span class="portrait-glass" aria-hidden="true"></span>
+                  </button>
+                  <div class="photo-sheet">
+                    <button class="photo-sheet-toggle" type="button" aria-expanded="false" aria-pressed="false" aria-controls="photo-sheet-panel" aria-label="Open the contact sheet preview" hidden>
+                      <span class="photo-sheet-clip" aria-hidden="true">[=]</span>
+                      <span class="photo-sheet-peek" aria-hidden="true"><span>01</span><span>02</span><span>03</span></span>
+                    </button>
+                    <section class="photo-sheet-panel" id="photo-sheet-panel" aria-label="Contact sheet preview" hidden>
+                      <p class="photo-sheet-heading">a few moments, waiting.</p>
+                      <div class="photo-sheet-thumbnails" role="group" aria-label="Choose a contact sheet frame">
+                        <button type="button" data-photo-select="0" aria-pressed="true" aria-controls="photo-sheet-images" aria-label="View frame 01, photograph to come">01</button>
+                        <button type="button" data-photo-select="1" aria-pressed="false" aria-controls="photo-sheet-images" aria-label="View frame 02, photograph to come">02</button>
+                        <button type="button" data-photo-select="2" aria-pressed="false" aria-controls="photo-sheet-images" aria-label="View frame 03, photograph to come">03</button>
+                      </div>
+                      <div id="photo-sheet-images">
+                        <figure class="photo-sheet-image" data-photo-frame>
+                          <div class="photo-sheet-empty" role="img" aria-label="Empty frame 01 placeholder, not a photograph"><span aria-hidden="true">01<br>photograph to come</span></div>
+                          <figcaption>frame 01 &mdash; an empty slot for a real photograph.</figcaption>
+                        </figure>
+                        <figure class="photo-sheet-image" data-photo-frame hidden>
+                          <div class="photo-sheet-empty" role="img" aria-label="Empty frame 02 placeholder, not a photograph"><span aria-hidden="true">02<br>photograph to come</span></div>
+                          <figcaption>frame 02 &mdash; an empty slot for a real photograph.</figcaption>
+                        </figure>
+                        <figure class="photo-sheet-image" data-photo-frame hidden>
+                          <div class="photo-sheet-empty" role="img" aria-label="Empty frame 03 placeholder, not a photograph"><span aria-hidden="true">03<br>photograph to come</span></div>
+                          <figcaption>frame 03 &mdash; an empty slot for a real photograph.</figcaption>
+                        </figure>
+                      </div>
+                      <p class="photo-sheet-status" role="status" aria-live="polite" aria-atomic="true">frame 01 of 03</p>
+                    </section>
+                  </div>
                 </div>
                 <figcaption>a moment, framed.</figcaption>
               </figure>

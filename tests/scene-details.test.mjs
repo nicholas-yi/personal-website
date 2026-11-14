@@ -4,7 +4,7 @@ import { installSceneDetails } from "../public/scene-details.js";
 
 const projects = new Set(["bird", "agent", "graph", "speech"]);
 
-function fixture(kinds = ["chair", "flower", "steam", "plant", "bird", "agent", "graph", "speech", "embers"]) {
+function fixture(kinds = ["chair", "flower", "steam", "plant", "bird", "agent", "graph", "speech", "embers", "portrait"]) {
   const doc = new EventTarget();
   doc.hidden = false;
   doc.documentElement = { dataset: { rain: "moving" } };
@@ -99,7 +99,7 @@ test("scene details initialize as static art with no timer, and pages without de
 });
 
 test("all one-shot effects play once and settle on their exact bounded durations", () => {
-  for (const [kind, duration] of [["chair", 2100], ["steam", 1600], ["plant", 1500], ["bird", 1400], ["agent", 2400], ["graph", 3600], ["speech", 1900], ["embers", 1100]]) {
+  for (const [kind, duration] of [["chair", 2100], ["steam", 1600], ["plant", 1500], ["bird", 1400], ["agent", 2400], ["graph", 3600], ["speech", 1900], ["embers", 1100], ["portrait", 900]]) {
     const f = fixture();
     f.visible();
     f.hover(kind);
@@ -290,7 +290,7 @@ test("manual scene motion works with rain paused, without enabling rain or sound
   f.doc.documentElement.dataset.rain = "still";
   f.doc.documentElement.dataset.sound = "off";
   f.visible();
-  for (const kind of ["chair", "steam", "plant", ...projects, "embers"]) {
+  for (const kind of ["chair", "steam", "plant", ...projects, "embers", "portrait"]) {
     f.hover(kind);
     assert.equal(f.button(kind).dataset.detailState, "playing");
   }
@@ -302,6 +302,21 @@ test("manual scene motion works with rain paused, without enabling rain or sound
   assert.equal(f.button("flower").dataset.butterfly, "perched");
   assert.equal(f.doc.documentElement.dataset.rain, "still");
   assert.equal(f.doc.documentElement.dataset.sound, "off");
+});
+
+test("portrait activation has one short glint timer and respects reduced motion without queueing", () => {
+  const f = fixture();
+  f.visible();
+  for (let index = 0; index < 30; index++) f.event(f.button("portrait"), "click");
+  assert.equal(f.timers.size, 1);
+  assert.equal(f.button("portrait").dataset.detailState, "playing");
+  f.advance(900);
+  assert.equal(f.button("portrait").dataset.detailState, "rest");
+  assert.equal(f.timers.size, 0);
+  f.reduced.matches = true;
+  f.event(f.button("portrait"), "click");
+  assert.equal(f.button("portrait").dataset.detailState, "rest");
+  assert.equal(f.timers.size, 0);
 });
 
 test("each project card supports focus on its links as well as native icon activation", () => {

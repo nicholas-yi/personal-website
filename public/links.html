@@ -93,10 +93,6 @@
                   <span>Notes from Stashbird, on what a memory keeps and what it lets go.</span>
                 </summary>
                 <article class="story-copy" aria-label="Stashbird case study">
-                  <div class="copy-tools story-tools">
-                    <button class="copy-action" type="button" data-copy-note="stashbird-case-study" aria-label="Copy link to When a conversation changes" hidden>copy note link</button>
-                    <span class="copy-status" role="status" aria-live="polite" aria-atomic="true"></span>
-                  </div>
                   <p>I want an agent to remember what I said. I also want to be allowed to stop meaning it. A plan is still a plan when I change the time; a preference can be sincere without being permanent. Neither feels like an unusual thing to ask of a conversation.</p>
                   <p>It becomes less straightforward when the conversation has already been turned into something else. A message becomes an entity, a relation, a searchable passage. It might also lend a few words to a summary that no longer makes its source obvious. The original sentence is now doing work in places I cannot see.</p>
                   <p class="story-aside">Removing the message is only the beginning. <em>What matters is whether its consequences still answer for me.</em></p>
@@ -125,6 +121,14 @@ reconcile each view</pre>
                   <h4>What the test can tell us</h4>
                   <p>The paper separates question answering from controlled updates and deletions. In the lifecycle studies, <strong>semantic decisions are held fixed</strong>, so the experiment can isolate whether reconciliation reaches the intended state. That is useful evidence about the mechanism. It is not, on its own, evidence that every model-generated interpretation of a conversation will be right.</p>
                   <p>I co-authored Stashbird. My related work in Microsoft Teams included co-engineering provenance-aware memory and owning evaluation across memory systems and benchmarks. Isolated runs, stage-level telemetry, and recovery helped distinguish infrastructure failures from model-quality regressions. This is a team project; the method described here comes from our co-authored paper.</p>
+
+                  <h4>What I'd test next</h4>
+                  <p>I'd put a revised memory in the path of a decision: change an earlier preference or remove one source, then ask whether the agent takes the right action (and whether it knows when to check). I'd keep the task, tools, and model fixed, and compare against no memory and an authoritative current-state reference. Recalling the new fact is one check. Acting on it appropriately is another. This is a proposed experiment, not a result from the Stashbird paper.</p>
+
+                  <h4>Research that shapes the question</h4>
+                  <p><a href="https://arxiv.org/abs/2602.14229">CorpGen</a> offers a useful lens on memory interference and changing dependencies across interleaved tasks. Its reuse of verified demonstrations also raises a question: what improved &mdash; the memory, the plan, the tools, or access to a successful example?</p>
+                  <p class="story-sources story-reading">Related reading: <a href="https://arxiv.org/html/2602.14229v1">CorpGen, version 1</a> (&sect;3.6 on demonstration reuse; &sect;5.3 describes a preliminary artifact-versus-trace evaluation observation, separate from its main experiments).</p>
+
                   <p>I want memory that leaves room for a conversation to change. But I do not think that means keeping less indiscriminately, any more than remembering well means keeping everything. It means being able to explain why a fact is still there, and to let it go when that explanation no longer holds.</p>
                   <p class="story-related">The evaluation side of that question: <a href="#evaluation-field-note">What makes an evaluation trustworthy?</a></p>
                   <p class="story-sources">Method and published experiments: <a href="https://arxiv.org/html/2609.34242v2">Stashbird, version 2</a>.</p>
@@ -155,8 +159,12 @@ reconcile each view</pre>
             <li class="public-link-entry" id="hateful-memes">
               <div class="eyebrow">Facebook / DrivenData / <time datetime="2020">2020</time></div>
               <h3><a href="https://www.drivendata.org/competitions/70/hateful-memes-phase-2/leaderboard/#leaderRow_151286">Hateful Memes Challenge: Phase 2 <span class="external-arrow" aria-hidden="true">&#8599;</span></a></h3>
-              <p>18th place in Phase 2; 3,000+ participants across the challenge. A BERT/ViLBERT ensemble for multimodal hate detection.</p>
-              <div class="work-links"><a href="https://www.drivendata.org/competitions/70/hateful-memes-phase-2/leaderboard/#leaderRow_151286" aria-label="Hateful Memes Phase 2 result, nickyi in eighteenth place">nickyi on the leaderboard <span aria-hidden="true">&#8599;</span></a></div>
+              <p>18th place in Phase 2; 3,173 registrants in that phase. A BERT/ViLBERT ensemble for multimodal hate detection.</p>
+              <div class="work-links">
+                <a href="https://www.drivendata.org/competitions/70/hateful-memes-phase-2/leaderboard/#leaderRow_151286" aria-label="Hateful Memes Phase 2 result, nickyi in eighteenth place">nickyi on the leaderboard <span aria-hidden="true">&#8599;</span></a>
+                <span aria-hidden="true">/</span>
+                <a href="https://proceedings.mlr.press/v133/kiela21a.html">organizers' challenge report <span aria-hidden="true">&#8599;</span></a>
+              </div>
             </li>
             <li class="public-link-entry" id="kuzushiji">
               <div class="eyebrow">Kaggle / <time datetime="2019">2019</time></div>
@@ -176,10 +184,6 @@ reconcile each view</pre>
               <span>On the distance between a reassuring number and a result worth trusting.</span>
             </summary>
             <article class="story-copy" aria-label="Evaluation field note">
-              <div class="copy-tools story-tools">
-                <button class="copy-action" type="button" data-copy-note="evaluation-field-note" aria-label="Copy link to What makes an evaluation trustworthy?" hidden>copy note link</button>
-                <span class="copy-status" role="status" aria-live="polite" aria-atomic="true"></span>
-              </div>
               <p>A better score is reassuring. I do not think that reassurance is necessarily misplaced; a comparison can tell us something real. I just want to know which comparison we actually made.</p>
               <p>Was the answer wrong, or did the run never reach an answer? It is a small distinction until both attempts become the same cell in a table. Then the distinction is most of what I need to understand.</p>
 

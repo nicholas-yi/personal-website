@@ -1,4 +1,4 @@
-const DURATIONS = Object.freeze({ chair: 2100, steam: 1600, plant: 1500, bird: 1400, agent: 2400, graph: 3600, speech: 1900, embers: 1100 });
+const DURATIONS = Object.freeze({ chair: 2100, steam: 1600, plant: 1500, bird: 1400, agent: 2400, graph: 3600, speech: 1900, embers: 1100, portrait: 900 });
 const PROJECT_DETAILS = new Set(["bird", "agent", "graph", "speech"]);
 const BUTTERFLY_ARRIVAL = 1200;
 const BUTTERFLY_DEPARTURE = 850;

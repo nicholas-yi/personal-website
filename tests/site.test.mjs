@@ -94,7 +94,7 @@ test("sound defaults off with a crossed-out speaker and starts only through its 
   assert.match(css, /\[aria-pressed="true"\] \.sound-muted \{ display: none; \}/);
 });
 
-test("rain preferences are visit-scoped and writing/mail copy tools are native progressive enhancements", async () => {
+test("rain preferences are visit-scoped while writing links and mail copy progressively enhance native controls", async () => {
   const garden = await (await fetch(`${origin}/garden.js`)).text();
   assert.ok(garden.includes("rainPreference.remember(motionEnabled)"));
   assert.ok(garden.includes("rainPreference.enabled(reducedMotion.matches)"));
@@ -108,12 +108,14 @@ test("rain preferences are visit-scoped and writing/mail copy tools are native p
   assert.ok(source.includes('view.addEventListener("hashchange"'));
   assert.ok(source.includes("clipboard.writeText(text)"));
   assert.ok(!source.includes("execCommand"));
+  assert.doesNotMatch(source, /data-copy-note|link copied|noteShareURL/);
   const home = await (await fetch(origin)).text();
   assert.ok(home.includes('class="mail-corner"'));
   assert.ok(home.includes('data-copy-email aria-label="Copy email address" hidden'));
   assert.ok(home.includes('class="copy-status" role="status" aria-live="polite"'));
   const links = await (await fetch(`${origin}/links.html`)).text();
-  for (const id of ["stashbird-case-study", "evaluation-field-note"]) assert.ok(links.includes(`data-copy-note="${id}"`));
+  for (const id of ["stashbird-case-study", "evaluation-field-note"]) assert.ok(links.includes(`id="${id}"`));
+  assert.doesNotMatch(links, /data-copy-note|story-tools|copy note link|class="copy-status"/);
   const css = await (await fetch(`${origin}/styles.css`)).text();
   assert.ok(css.includes(".mail-corner .mailbox { grid-column: 1; }"));
   assert.match(css, /\.copy-action \{[^}]*min-height: 44px/);
@@ -306,9 +308,13 @@ test("public accomplishments link to the paper, PDF, article, and official compe
     "https://medium.com/data-science-at-microsoft/graphrag-beyond-the-demo-lessons-from-the-trenches-add83180f849",
     "https://www.kaggle.com/competitions/kuzushiji-recognition/leaderboard",
     "https://www.drivendata.org/competitions/70/hateful-memes-phase-2/leaderboard/#leaderRow_151286",
+    "https://proceedings.mlr.press/v133/kiela21a.html",
     "https://github.com/microsoft/Staccato-Stuttered-ASR",
   ]) assert.ok(html.includes(`href="${url}"`), url);
-  assert.ok(html.includes("17th out of 293 teams") && html.includes("18th place in Phase 2; 3,000+ participants across the challenge"));
+  assert.ok(html.includes("17th out of 293 teams") && html.includes("18th place in Phase 2; 3,173 registrants in that phase."));
+  const hatefulMemes = html.match(/<li class="public-link-entry" id="hateful-memes">([\s\S]*?)<\/li>/)[1];
+  assert.ok(hatefulMemes.includes("organizers' challenge report"));
+  assert.ok(!hatefulMemes.includes("3,173 competitors") && !hatefulMemes.includes("3,000+ participants"));
   assert.ok(html.includes("logographic &amp; linguistic OCR"));
   assert.ok(!html.includes("Japanese handwritten"));
   assert.ok(html.includes('aria-label="Stashbird preprint PDF"'));
@@ -460,16 +466,16 @@ test("the sidequest staircases preserve the user's exact wording and reading ord
   assert.ok(!about.includes("sidequest-qualifier"));
   assert.ok(about.includes("<li>therapeutic archery as an ex-olympic training team usa member,</li>"));
   const conclusion = about.match(/<p class="sidequest-conclusion">([\s\S]*?)<\/p>/)[1].replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
-  assert.equal(conclusion, "I seek to understand the outside world one different lens, or neural layer, at a time");
+  assert.equal(conclusion, "I seek to understand the outside world one different lens, or neural layer, at a time.");
   assert.ok(about.includes("<span>I seek to understand the outside world</span>"));
   assert.ok(about.includes("<span>one different lens,</span>"));
   assert.ok(about.includes("<span>or neural layer,</span>"));
-  assert.ok(about.includes("<span>at a time</span>"));
+  assert.ok(about.includes("<span>at a time.</span>"));
   assert.ok(!about.includes("Team USA") && !about.includes("an art museum undiscovered"));
   assert.ok(!about.includes("shoooting"));
   assert.ok(!about.includes("developping"));
   assert.ok(!about.includes("or open-sourcing my work and entering online competitions"));
-  assert.ok(about.includes("If any of those are your thing"));
+  assert.ok(about.includes("<p>if any of those are your thing,"));
   assert.ok(!about.includes("Amazon") && !about.includes("Cisco"));
   assert.ok(!about.includes("One art-history sidequest:"));
   assert.ok(!about.includes("Sometimes, different neural layers."));
@@ -591,7 +597,7 @@ test("all pages have global navigation and a still-usable ASCII fireplace", asyn
 test("Links is one continuous roofed house with a floor for each discrete milestone", async () => {
   const html = await (await fetch(`${origin}/links.html`)).text();
   assert.ok(html.includes('class="links-house house-shelter"'));
-  assert.ok(html.indexOf('class="house-roof"') < html.indexOf("<h1>Links"));
+  assert.ok(html.indexOf('class="house-roof"') < html.indexOf("<h1>Field notes"));
   assert.ok(html.indexOf('class="house-body"') < html.indexOf('class="public-links"'));
   assert.ok(!html.includes("roofed-hearth"));
   assert.equal((html.match(/class="house-roof"/g) || []).length, 1);
@@ -858,6 +864,98 @@ test("About keeps a single static portrait without bookshelf or carousel preview
   assert.doesNotMatch(css, /bookshelf|shelf-book|picture-swivel|picture-controls|picture-postcard/);
 });
 
+test("the dangling contact sheet uses labeled empty photo slots without replacing the portrait", async () => {
+  const html = await (await fetch(`${origin}/about`)).text();
+  assert.equal((html.match(/class="picture-photo"/g) ?? []).length, 1);
+  assert.ok(html.includes('class="photo-sheet-toggle" type="button" aria-expanded="false" aria-pressed="false"'));
+  assert.ok(html.includes('aria-label="Open the contact sheet preview" hidden'));
+  assert.ok(html.includes('id="photo-sheet-panel" aria-label="Contact sheet preview" hidden'));
+  assert.equal((html.match(/data-photo-frame/g) ?? []).length, 3);
+  assert.equal((html.match(/data-photo-select="/g) ?? []).length, 3);
+  assert.equal((html.match(/not a photograph/g) ?? []).length, 3);
+  assert.doesNotMatch(html, /preview slots|class="photo-sheet-note"|class="photo-sheet-close"/);
+  const module = await fetch(`${origin}/photo-sheet.js`);
+  assert.equal(module.status, 200);
+  assert.match(module.headers.get("content-type"), /javascript/);
+  assert.doesNotMatch(await module.text(), /fetch\(|localStorage|sessionStorage|AudioContext|setInterval|requestAnimationFrame/);
+  const garden = await (await fetch(`${origin}/garden.js`)).text();
+  assert.ok(garden.includes('import { installPhotoSheet } from "./photo-sheet.js"'));
+  assert.ok(garden.includes("installPhotoSheet(document)"));
+  const css = await (await fetch(`${origin}/styles.css`)).text();
+  assert.match(css, /\.photo-sheet-panel \{[^}]*max-height:[^}]*overflow: auto;/);
+  assert.match(css, /@media \(prefers-reduced-motion: no-preference\) and \(forced-colors: none\) \{[\s\S]*?\.photo-sheet-toggle \{ transition: transform 250ms ease; \}/);
+  assert.match(css, /\.photo-sheet-panel \{ position: fixed;[^}]*left: 20px; right: 20px;/);
+});
+
+test("portrait glass has a separate finite reflection control without moving the photograph or opening the sheet", async () => {
+  const html = await (await fetch(`${origin}/about`)).text();
+  assert.ok(html.includes('data-scene-detail="portrait" aria-label="Catch a little light on the portrait glass" disabled'));
+  assert.ok(html.includes('class="portrait-glass" aria-hidden="true"'));
+  assert.equal((html.match(/class="picture-photo"/g) ?? []).length, 1);
+  const css = await (await fetch(`${origin}/styles.css`)).text();
+  assert.match(css, /\.picture-art \.portrait-trigger \{[^}]*position: absolute;[^}]*width: max\(44px, 16ch\)/);
+  assert.match(css, /\.portrait-glass \{[^}]*overflow: hidden;[^}]*pointer-events: none/);
+  assert.match(css, /@media \(prefers-reduced-motion: no-preference\) and \(forced-colors: none\) \{\s*\.portrait-trigger\[data-detail-state="playing"\]/);
+  assert.match(css, /@keyframes portrait-glint/);
+  assert.doesNotMatch(css, /animation: portrait-glint[^;}]*infinite/);
+  const sheet = await (await fetch(`${origin}/photo-sheet.js`)).text();
+  assert.ok(sheet.includes('engagement = frame.querySelector(".photo-sheet")'));
+  assert.ok(!sheet.includes('corner.addEventListener("pointerenter"') && !sheet.includes('corner.addEventListener("focusin"'));
+  const theme = await (await fetch(`${origin}/theme.css`)).text();
+  assert.match(theme, /:root\[data-theme="lamplight"\] \.portrait-glass \{ --portrait-glint:/);
+});
+
+test("collapsible field notes have centered reading panels with passive mist behind crisp prose", async () => {
+  const css = await (await fetch(`${origin}/styles.css`)).text();
+  assert.match(css, /\.work-story \{[^}]*isolation: isolate;[^}]*border: 1px solid var\(--note-line\);[^}]*background: var\(--note-paper\)/);
+  assert.match(css, /\.work-story > \.story-copy \{ width: calc\(100% - 40px\); margin: 22px auto 24px; text-align: left; \}/);
+  assert.match(css, /\.note-mist \{[^}]*z-index: -1;[^}]*opacity: 0\.75;[^}]*pointer-events: none/);
+  assert.doesNotMatch(css, /\.work-story \{[^}]*\bopacity:|\.story-copy \{[^}]*(?:filter|opacity):/);
+  assert.match(css, /\.work-story > \.story-copy \{ width: calc\(100% - 24px\); margin-block: 18px; \}/);
+  assert.match(css, /\.work-story \.story-aside \{ max-width: 54ch; margin: 26px auto;/);
+  const theme = await (await fetch(`${origin}/theme.css`)).text();
+  const saturation = rgb => {
+    const low = Math.min(...rgb) / 255, high = Math.max(...rgb) / 255;
+    return high === low ? 0 : (high - low) / (1 - Math.abs(high + low - 1));
+  };
+  for (const palette of [css, theme]) {
+    const paper = palette.match(/--note-paper: #(..)(..)(..);/).slice(1).map(value => parseInt(value, 16));
+    const banner = palette.match(/--glass-fog-rgb: ([\d, ]+);/)[1].split(",").map(Number);
+    const colors = [paper, ...["fog", "light", "dew"].map(name => palette.match(new RegExp(`--note-${name}-rgb: ([\\d, ]+);`))[1].split(",").map(Number))];
+    for (const color of colors) {
+      assert.ok(color[1] > color[0] && color[1] > color[2], "note surfaces and droplets must stay sage, not warm red");
+      assert.ok(saturation(color) < saturation(banner), "note palette must be less saturated than the banner");
+    }
+  }
+  const garden = await (await fetch(`${origin}/garden.js`)).text();
+  assert.ok(garden.includes('installHeaderGlass, installNoteMist'));
+  assert.ok(garden.includes('installNoteMist(document)'));
+  const note = await (await fetch(`${origin}/notes/evaluation`)).text();
+  assert.ok(!note.includes('class="work-story"'));
+});
+
+test("Stashbird next-test stays prospective and CorpGen references stay research-focused", async () => {
+  const html = await (await fetch(`${origin}/links`)).text();
+  const story = html.match(/<details class="work-story" id="stashbird-case-study">([\s\S]*?)<\/details>/)[1];
+  assert.ok(story.includes("<h4>What I'd test next</h4>"));
+  assert.ok(story.includes("<h4>Research that shapes the question</h4>"));
+  assert.ok(story.indexOf("What I'd test next") > story.indexOf("I co-authored Stashbird."));
+  assert.ok(story.indexOf("What I'd test next") < story.indexOf("I want memory that leaves room for a conversation to change."));
+  assert.ok(story.includes("This is a proposed experiment, not a result from the Stashbird paper."));
+  assert.ok(story.includes("compare against no memory and an authoritative current-state reference"));
+  assert.ok(story.includes('href="https://arxiv.org/abs/2602.14229"'));
+  assert.ok(story.includes('href="https://arxiv.org/html/2602.14229v1"'));
+  assert.ok(story.includes('class="story-sources story-reading">Related reading:'));
+  const css = await (await fetch(`${origin}/styles.css`)).text();
+  assert.match(css, /\.story-copy \.story-reading \{ margin-inline-start: 20px; \}/);
+  assert.match(css, /\.story-copy \.story-reading \{ margin-inline-start: 14px; \}/);
+  assert.ok(story.includes("memory interference and changing dependencies across interleaved tasks"));
+  assert.ok(story.includes("reuse of verified demonstrations"));
+  assert.doesNotMatch(story, /Chidera Biringa|co-authored by|influence I've spent time with|I didn't co-author CorpGen|not claiming it shaped|questions I'd pursue next|not project credit/);
+  assert.ok(story.includes("preliminary artifact-versus-trace evaluation observation, separate from its main experiments"));
+  const home = await (await fetch(origin)).text();
+  assert.ok(!home.includes("CorpGen") && !home.includes("What I'd test next"));
+});
 test("Cantor is mentioned without linking or publishing the supplied essay", async () => {
   const html = await (await fetch(`${origin}/about.html`)).text();
   assert.ok(html.includes("my archival art volunteering at stanford's cantor arts center,"));
@@ -1193,7 +1291,7 @@ test("the standalone evaluation note is readable without script and keeps nested
   assert.equal(await head.text(), "");
   const links = await (await fetch(`${origin}/links#evaluation-field-note`)).text();
   const entry = links.match(/<details class="work-story" id="evaluation-field-note">([\s\S]*?)<\/details>/)[1];
-  assert.ok(entry.includes('data-copy-note="evaluation-field-note"'));
+  assert.doesNotMatch(entry, /data-copy-note|copy-status/);
   assert.ok(entry.includes('href="/notes/evaluation"'));
   assert.ok(entry.includes("A better score is reassuring."));
   assert.ok(!entry.includes("What actually happened?"));

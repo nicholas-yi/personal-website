@@ -44,17 +44,6 @@ export function revealStory(doc, hash) {
   return target;
 }
 
-export function noteShareURL(doc, id) {
-  if (!doc.getElementById(id)?.matches("details.work-story")) throw new Error("That note is not available to share.");
-  const canonical = doc.querySelector('link[rel="canonical"]');
-  if (!canonical) throw new Error("The note's canonical URL is missing.");
-  const url = new URL(canonical.href);
-  if (!["http:", "https:"].includes(url.protocol)) throw new Error("The note needs a web URL.");
-  url.search = "";
-  url.hash = id;
-  return url.href;
-}
-
 export async function copyText(view, text) {
   if (typeof text !== "string" || !text.trim()) throw new TypeError("There is no text to copy.");
   if (!view.navigator.clipboard?.writeText) throw new Error("Clipboard access is unavailable in this browser.");
@@ -130,9 +119,6 @@ export function installPageTools(doc) {
       if (url.origin === view.location.origin && url.pathname === view.location.pathname && url.search === view.location.search) reveal(url.hash);
     });
     reveal(view.location.hash);
-    for (const button of doc.querySelectorAll("[data-copy-note]")) {
-      bindCopy(doc, button, () => noteShareURL(doc, button.dataset.copyNote), "link copied", "Link to this note");
-    }
   }
   const mailbox = doc.querySelector(".mailbox");
   const emailButton = doc.querySelector("[data-copy-email]");

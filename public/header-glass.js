@@ -49,7 +49,7 @@ export function paintGlassSegment(field, from, to, now) {
   }
   for (const point of [from, to]) {
     if (point.x < 0 || point.x > field.cssWidth || point.y < 0 || point.y > field.cssHeight) {
-      throw new RangeError("The glass wipe must stay inside the header.");
+      throw new RangeError("The glass wipe must stay inside its surface.");
     }
   }
   const x = from.x * MASK_SCALE;
@@ -100,6 +100,14 @@ export function writeGlassMask(field, pixels, now) {
 export function installHeaderGlass(doc) {
   const header = doc.querySelector(".site-header");
   if (!header) return;
+  installGlassSurface(doc, header, false);
+}
+
+export function installNoteMist(doc) {
+  for (const note of doc.querySelectorAll("details.work-story")) installGlassSurface(doc, note, true);
+}
+
+function installGlassSurface(doc, surface, mist) {
   const view = doc.defaultView;
   const forced = view.matchMedia("(forced-colors: active)");
   const canvas = doc.createElement("canvas");
@@ -109,10 +117,10 @@ export function installHeaderGlass(doc) {
   const frost = texture.getContext("2d");
   const maskContext = mask.getContext("2d");
   if (!context || !frost || !maskContext) {
-    console.warn("Header condensation needs canvas support; the static banner is unchanged.");
+    console.warn(mist ? "Note condensation needs canvas support; the reading panel is unchanged." : "Header condensation needs canvas support; the static banner is unchanged.");
     return;
   }
-  canvas.className = "header-glass";
+  canvas.className = mist ? "note-mist" : "header-glass";
   canvas.setAttribute("aria-hidden", "true");
   let field;
   let pixels;
@@ -124,7 +132,8 @@ export function installHeaderGlass(doc) {
   let width = 0;
   let height = 0;
   let scale = 1;
-  const active = () => !doc.hidden && !forced.matches;
+  let visible = !mist;
+  const active = () => visible && !doc.hidden && !forced.matches && (!mist || surface.open);
 
   function draw(now) {
     context.clearRect(0, 0, width, height);
@@ -144,7 +153,7 @@ export function installHeaderGlass(doc) {
     if (!active()) return;
     if (now >= nextFrame || now >= expiresAt) {
       draw(now);
-      nextFrame = now + FRAME_INTERVAL;
+      nextFrame = now + (mist ? 1000 / 24 : FRAME_INTERVAL);
     }
     if (field.active) frame = view.requestAnimationFrame(animate);
     else nextFrame = 0;
@@ -166,8 +175,8 @@ export function installHeaderGlass(doc) {
   }
 
   function resize(force = false) {
-    const bounds = header.getBoundingClientRect();
-    const density = Math.min(view.devicePixelRatio || 1, 1.5);
+    const bounds = surface.getBoundingClientRect();
+    const density = Math.min(view.devicePixelRatio || 1, mist ? 1 : 1.5);
     if (force !== true && width === bounds.width && height === bounds.height && scale === density) return;
     const geometryChanged = width !== bounds.width || height !== bounds.height;
     width = bounds.width;
@@ -182,38 +191,56 @@ export function installHeaderGlass(doc) {
     context.setTransform(scale, 0, 0, scale, 0, 0);
     frost.setTransform(scale, 0, 0, scale, 0, 0);
     if (geometryChanged) {
-      field = createGlassField(width, height, Math.max(32, height * 0.56) * 1.5 / 2);
+      field = createGlassField(width, height, mist ? 38 : Math.max(32, height * 0.56) * 1.5 / 2);
       mask.width = field.width;
       mask.height = field.height;
       pixels = maskContext.createImageData(field.width, field.height);
     }
     frost.clearRect(0, 0, width, height);
     const palette = view.getComputedStyle(doc.documentElement);
-    const fog = palette.getPropertyValue("--glass-fog-rgb").trim();
-    const light = palette.getPropertyValue("--glass-light-rgb").trim();
-    const dew = palette.getPropertyValue("--glass-dew-rgb").trim();
-    frost.fillStyle = `rgba(${fog}, ${(0.925 - 0.12) / (1 - 0.12)})`;
+    const fog = palette.getPropertyValue(mist ? "--note-fog-rgb" : "--glass-fog-rgb").trim();
+    const light = palette.getPropertyValue(mist ? "--note-light-rgb" : "--glass-light-rgb").trim();
+    const dew = palette.getPropertyValue(mist ? "--note-dew-rgb" : "--glass-dew-rgb").trim();
+    frost.fillStyle = `rgba(${fog}, ${mist ? 0.20 : (0.925 - 0.12) / (1 - 0.12)})`;
     frost.fillRect(0, 0, width, height);
-    const cloud = frost.createRadialGradient(width * 0.6, -height, height * 0.3, width * 0.6, 0, width * 0.72);
-    cloud.addColorStop(0, `rgba(${light}, 0.25)`);
-    cloud.addColorStop(1, "transparent");
-    frost.fillStyle = cloud;
-    frost.fillRect(0, 0, width, height);
-    for (let index = 0; index < Math.ceil(width / 12); index++) {
-      const x = ((index * 73.37 + 11) % width);
-      const y = ((index * 31.13 + 19) % height);
-      const radius = 0.65 + index % 4 * 0.35;
-      frost.fillStyle = `rgba(${dew}, 0.13)`;
+    if (mist) {
+      for (let row = 0; row < Math.ceil(height / 220); row++) {
+        const x = width * (row % 2 ? 0.78 : 0.18);
+        const y = row * 220 + 90;
+        const radius = Math.min(width * 0.65, 220 + row % 3 * 25);
+        const cloud = frost.createRadialGradient(x, y, radius * 0.05, x, y, radius);
+        cloud.addColorStop(0, `rgba(${fog}, 0.12)`);
+        cloud.addColorStop(0.55, `rgba(${fog}, 0.06)`);
+        cloud.addColorStop(1, "transparent");
+        frost.fillStyle = cloud;
+        frost.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+      }
+    } else {
+      const cloud = frost.createRadialGradient(width * 0.6, -height, height * 0.3, width * 0.6, 0, width * 0.72);
+      cloud.addColorStop(0, `rgba(${light}, 0.25)`);
+      cloud.addColorStop(1, "transparent");
+      frost.fillStyle = cloud;
+      frost.fillRect(0, 0, width, height);
+    }
+    const droplets = mist ? Math.ceil(width * height / 9000) : Math.ceil(width / 12);
+    for (let index = 0; index < droplets; index++) {
+      const inset = 3 + (index * 7.37) % 7;
+      const x = mist ? (index % 2 ? width - inset : inset) : (index * 73.37 + 11) % width;
+      const y = mist ? ((index * 0.61803398875 + 0.17) % 1) * height : (index * 31.13 + 19) % height;
+      const radius = mist ? 0.9 + index % 4 * 0.45 : 0.65 + index % 4 * 0.35;
+      frost.fillStyle = `rgba(${dew}, ${mist ? 0.24 : 0.13})`;
       frost.beginPath();
       frost.ellipse(x, y, radius, radius * 1.35, 0, 0, Math.PI * 2);
       frost.fill();
-      frost.fillStyle = `rgba(${light}, 0.65)`;
+      frost.fillStyle = `rgba(${light}, ${mist ? 0.36 : 0.65})`;
       frost.beginPath();
       frost.arc(x - radius * 0.25, y - radius * 0.35, Math.max(0.35, radius * 0.35), 0, Math.PI * 2);
       frost.fill();
     }
-    if (geometryChanged) clear();
-    else draw(view.performance.now());
+    if (geometryChanged) {
+      clear();
+      if (mist && doc.hidden) draw(view.performance.now());
+    } else draw(view.performance.now());
   }
 
   function mark(event) {
@@ -221,7 +248,7 @@ export function installHeaderGlass(doc) {
     const coalesced = event.getCoalescedEvents?.();
     const samples = coalesced?.length ? coalesced : [event];
     const time = view.performance.now();
-    inputBounds ??= header.getBoundingClientRect();
+    inputBounds ??= surface.getBoundingClientRect();
     for (const sample of samples) {
       const point = { x: sample.clientX - inputBounds.left, y: sample.clientY - inputBounds.top, time };
       if (point.x < 0 || point.x > width || point.y < 0 || point.y > height) { lastPoint = null; continue; }
@@ -233,20 +260,30 @@ export function installHeaderGlass(doc) {
     if (field.active && !frame) frame = view.requestAnimationFrame(animate);
   }
 
-  header.addEventListener("pointermove", event => {
+  surface.addEventListener("pointermove", event => {
     if (event.pointerType === "touch") return;
     mark(event);
   }, { passive: true });
-  header.addEventListener("pointerleave", () => { lastPoint = null; inputBounds = null; });
-  header.addEventListener("pointercancel", clear);
+  surface.addEventListener("pointerleave", () => { lastPoint = null; inputBounds = null; });
+  surface.addEventListener("pointercancel", clear);
   view.addEventListener("blur", clear);
   view.addEventListener("resize", resize);
   view.addEventListener("scroll", () => { lastPoint = null; inputBounds = null; }, { passive: true });
   view.addEventListener("themechange", () => resize(true));
   doc.addEventListener("visibilitychange", clear);
   forced.addEventListener("change", clear);
-  new view.ResizeObserver(resize).observe(header);
-  header.prepend(canvas);
+  new view.ResizeObserver(resize).observe(surface);
+  if (mist) {
+    surface.addEventListener("toggle", () => {
+      clear();
+      resize();
+    });
+    new view.IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      if (!visible) clear();
+    }).observe(surface);
+  }
+  surface.prepend(canvas);
   resize();
-  header.dataset.glass = "ready";
+  surface.dataset.glass = "ready";
 }

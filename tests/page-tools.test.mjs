@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createRainPreference, RAIN_PREFERENCE_KEY, revealStory, noteShareURL, copyText } from "../public/page-tools.js";
+import { createRainPreference, RAIN_PREFERENCE_KEY, revealStory, copyText } from "../public/page-tools.js";
 
 function storage(initial = null) {
   const values = new Map(initial === null ? [] : [[RAIN_PREFERENCE_KEY, initial]]);
@@ -95,16 +95,6 @@ test("direct, encoded, nested and already-open note targets reveal the correct d
   assert.equal(revealStory(doc, "#unknown"), null);
   assert.equal(revealStory(doc, ""), null);
   assert.throws(() => revealStory(doc, "#%"), URIError);
-});
-
-test("shared note URLs use the public canonical path and never carry preview/query parameters", () => {
-  const { doc } = notes();
-  assert.equal(noteShareURL(doc, "memory-note"), "https://nicholasyi.me/links#memory-note");
-  assert.throws(() => noteShareURL(doc, "unknown"), /not available/);
-  doc.querySelector = () => null;
-  assert.throws(() => noteShareURL(doc, "memory-note"), /canonical URL is missing/);
-  doc.querySelector = () => ({ href: "mailto:example@example.com" });
-  assert.throws(() => noteShareURL(doc, "memory-note"), /web URL/);
 });
 
 test("clipboard writes happen only on request, and denial or missing support is not reported as success", async () => {

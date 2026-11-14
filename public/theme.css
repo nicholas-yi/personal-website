@@ -15,6 +15,11 @@
     --glass-fog-rgb: 58, 51, 40;
     --glass-light-rgb: 235, 192, 121;
     --glass-dew-rgb: 150, 131, 98;
+    --note-paper: #272c29;
+    --note-line: #46514a;
+    --note-fog-rgb: 128, 139, 131;
+    --note-light-rgb: 194, 208, 196;
+    --note-dew-rgb: 117, 134, 121;
   }
   :root[data-theme="lamplight"] body::before {
     background: radial-gradient(ellipse at 86% 4%, #9a6b3030, transparent 53%), radial-gradient(ellipse at 12% 88%, #55432738, transparent 48%);
@@ -24,6 +29,7 @@
   :root[data-theme="lamplight"] a:hover { text-decoration-color: var(--green); }
   :root[data-theme="lamplight"] :is(.intro-copy, .work-copy > p, .links-intro, .public-link-entry > p, .story-copy, .about-copy p, .sidequest-path, .play-intro, .thought-question) { color: #c9c0aa; }
   :root[data-theme="lamplight"] :is(.work-copy > .project-context, .work-story > summary span, .story-copy .story-sources) { color: var(--muted); }
+  :root[data-theme="lamplight"] :is(.work-story > summary span, .work-story .story-sources) { color: color-mix(in srgb, var(--muted) 75%, var(--ink)); }
   :root[data-theme="lamplight"] :is(.work-copy > .project-recognition, .public-link-entry > .project-recognition, .external-arrow, .name-period, .intro-line) { color: var(--green); }
   :root[data-theme="lamplight"] .note-dash { background: #927d56; }
   :root[data-theme="lamplight"] .story-copy .story-aside { color: var(--ink); }
@@ -51,6 +57,7 @@
   :root[data-theme="lamplight"] .sidequest-conclusion > span:nth-child(4) { --thread-ink: #d8b27d; }
   :root[data-theme="lamplight"] .hearth { color: #b9a17c; }
   :root[data-theme="lamplight"] .hearth-embers { color: #efb86a; }
+  :root[data-theme="lamplight"] .portrait-glass { --portrait-glint: #f6d59866; --portrait-edge: #ecc57966; }
   :root[data-theme="lamplight"] .hearth-fire { color: #efb86a; background: radial-gradient(ellipse at 50% 70%, #d29a454d, transparent 75%); box-shadow: 0 7px 35px #d58e3029; }
   :root[data-theme="lamplight"] .click-umbrella { color: #c8c0a3; }
   :root[data-theme="lamplight"] .listening-card { background: #2c2922; border-color: #716044; box-shadow: 0 8px 26px #0e0c0960; }

@@ -34,6 +34,7 @@ const assets = new Map([
   ["/writing-review.js", ["writing-review.js", "text/javascript; charset=utf-8"]],
   ["/writing-originals.json", ["writing-originals.json", "application/json; charset=utf-8"]],
   ["/scene-details.js", ["scene-details.js", "text/javascript; charset=utf-8"]],
+  ["/photo-sheet.js", ["photo-sheet.js", "text/javascript; charset=utf-8"]],
   ["/thoughts.js", ["thoughts.js", "text/javascript; charset=utf-8"]],
   ["/puddles.js", ["puddles.js", "text/javascript; charset=utf-8"]],
   ["/rain-audio.js", ["rain-audio.js", "text/javascript; charset=utf-8"]],

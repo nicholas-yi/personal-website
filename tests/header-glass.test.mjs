@@ -1,21 +1,23 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createGlassField, paintGlassSegment, writeGlassMask, glassMarkStrength, GLASS_MARK_LIFETIME, GLASS_FOG_DELAY, installHeaderGlass } from "../public/header-glass.js";
+import { createGlassField, paintGlassSegment, writeGlassMask, glassMarkStrength, GLASS_MARK_LIFETIME, GLASS_FOG_DELAY, installHeaderGlass, installNoteMist } from "../public/header-glass.js";
 
-function fixture({ missing = false, canvasSupport = true } = {}) {
+function fixture({ missing = false, canvasSupport = true, note = false } = {}) {
   const doc = new EventTarget();
   doc.hidden = false;
   doc.documentElement = { dataset: { rain: "moving" } };
   const header = new EventTarget();
   header.dataset = {};
+  header.open = true;
   header.closest = () => null;
   header.querySelectorAll = () => [];
   let bounds = { left: 20, top: 0, width: 900, height: 82 };
   header.getBoundingClientRect = () => bounds;
   header.prepend = element => { header.canvas = element; };
   doc.querySelector = () => missing ? null : header;
+  doc.querySelectorAll = () => missing ? [] : [header];
   const contexts = [];
-  const colors = { "--glass-fog-rgb": "232, 236, 223", "--glass-light-rgb": "255, 255, 250", "--glass-dew-rgb": "116, 135, 120" };
+  const colors = { "--glass-fog-rgb": "232, 236, 223", "--glass-light-rgb": "255, 255, 250", "--glass-dew-rgb": "116, 135, 120", "--note-fog-rgb": "196, 205, 199", "--note-light-rgb": "238, 242, 237", "--note-dew-rgb": "132, 148, 138" };
   doc.createElement = () => {
     const calls = [];
     const context = { calls };
@@ -59,9 +61,16 @@ function fixture({ missing = false, canvasSupport = true } = {}) {
       constructor(callback) { observers.resize = callback; }
       observe(target) { assert.equal(target, header); }
     },
+    IntersectionObserver: class {
+      constructor(callback) { observers.visible = callback; }
+      observe(target) { assert.equal(target, header); }
+    },
   });
   doc.defaultView = view;
-  installHeaderGlass(doc);
+  if (note) {
+    installNoteMist(doc);
+    observers.visible?.([{ isIntersecting: true }]);
+  } else installHeaderGlass(doc);
   return {
     doc, view, header, reduced, forced, frames, contexts, observers, colors,
     setBounds(next) { bounds = next; },
@@ -108,6 +117,97 @@ test("the head holds briefly, then refogs completely at the requested 8.8 second
   }
   assert.throws(() => glassMarkStrength({}, 0), TypeError);
   assert.throws(() => glassMarkStrength(mark, NaN), TypeError);
+});
+
+test("note mist is lighter than the banner, uses a capped brush and reuses the exact 8.8-second wipe lifecycle", () => {
+  const f = fixture({ note: true });
+  assert.equal(f.header.canvas.className, "note-mist");
+  assert.equal(f.header.canvas.width, 900);
+  assert.equal(f.header.canvas.height, 82);
+  const fog = f.contexts[1].calls.find(call => call.name === "fillRect");
+  assert.equal(fog.fillStyle, "rgba(196, 205, 199, 0.2)");
+  const cloud = f.contexts[1].calls.find(call => call.name === "radialGradient");
+  assert.equal(cloud.gradient.stops[0][1], "rgba(196, 205, 199, 0.12)");
+  assert.ok(f.contexts[1].calls.some(call => call.name === "fill" && call.fillStyle === "rgba(132, 148, 138, 0.24)"));
+  assert.ok(f.contexts[1].calls.some(call => call.name === "fill" && call.fillStyle === "rgba(238, 242, 237, 0.36)"));
+  f.doc.documentElement.dataset.rain = "still";
+  f.reduced.matches = true;
+  f.pointer("pointermove", { clientX: 100 });
+  f.pointer("pointermove", { clientX: 180 });
+  f.step(0);
+  const pixels = f.contexts[2].calls.at(-1).args[0].data;
+  const alpha = () => pixels[(20 * 450 + 65) * 4 + 3];
+  assert.ok(alpha() / 255 > 0.95);
+  f.step(4400);
+  assert.ok(alpha() > 0 && alpha() < 248);
+  f.step(GLASS_MARK_LIFETIME);
+  assert.equal(alpha(), 0);
+  assert.equal(f.frames.size, 0);
+  assert.equal(f.pointer("pointerdown").defaultPrevented, false);
+  f.pointer("pointermove", { pointerType: "touch" });
+  assert.equal(f.frames.size, 0);
+});
+
+test("note clouds and edge condensation cover the full passage rather than one header-sized band", () => {
+  const f = fixture({ note: true });
+  f.contexts[1].calls.length = 0;
+  f.setBounds({ left: 20, top: 0, width: 742, height: 3028 });
+  f.observers.resize();
+  const clouds = f.contexts[1].calls.filter(call => call.name === "radialGradient");
+  assert.equal(clouds.length, Math.ceil(3028 / 220));
+  assert.ok(clouds.some(call => call.args[1] > 2500));
+  assert.ok(clouds.every(call => call.args[1] >= 0 && call.args[1] < 3028));
+  const drops = f.contexts[1].calls.filter(call => call.name === "ellipse");
+  assert.equal(drops.length, Math.ceil(742 * 3028 / 9000));
+  assert.ok(drops.some(call => call.args[1] > 2800));
+  assert.ok(drops.every(call => call.args[0] <= 10 || call.args[0] >= 732));
+  assert.equal(f.frames.size, 0);
+  f.colors["--note-fog-rgb"] = "128, 139, 131";
+  f.view.dispatchEvent(new Event("themechange"));
+  const paints = f.contexts[1].calls.filter(call => call.name === "fillRect");
+  assert.ok(paints.some(call => call.fillStyle === "rgba(128, 139, 131, 0.2)"));
+});
+
+test("closed or offscreen reading panels cancel the wipe and cannot start hidden drawing work", () => {
+  for (const stop of [
+    f => { f.header.open = false; f.header.dispatchEvent(new Event("toggle")); },
+    f => f.observers.visible([{ isIntersecting: false }]),
+  ]) {
+    const f = fixture({ note: true });
+    f.pointer("pointermove");
+    f.pointer("pointermove", { clientX: 180 });
+    assert.equal(f.frames.size, 1);
+    stop(f);
+    assert.equal(f.frames.size, 0);
+    f.pointer("pointermove");
+    f.pointer("pointermove", { clientX: 250 });
+    assert.equal(f.frames.size, 0);
+  }
+  const f = fixture({ note: true });
+  f.setBounds({ left: 20, top: 0, width: 900, height: 1500 });
+  f.observers.resize();
+  f.pointer("pointermove", { clientY: 500 });
+  f.pointer("pointermove", { clientX: 180, clientY: 500 });
+  f.step(0);
+  const pixels = f.contexts[2].calls.at(-1).args[0].data;
+  assert.equal(pixels[(400 * 450 + 65) * 4 + 3], 0);
+  assert.equal(fixture({ note: true, missing: true }).contexts.length, 0);
+});
+
+test("opening a note sizes and paints its mist immediately even before resize observers run in hidden previews", () => {
+  const f = fixture({ note: true });
+  f.doc.hidden = true;
+  const previousDraws = f.draws();
+  f.setBounds({ left: 20, top: 0, width: 900, height: 1500 });
+  f.header.dispatchEvent(new Event("toggle"));
+  assert.equal(f.header.canvas.height, 1500);
+  assert.ok(f.draws() > previousDraws);
+  assert.equal(f.frames.size, 0);
+  f.header.open = false;
+  f.setBounds({ left: 20, top: 0, width: 900, height: 82 });
+  f.header.dispatchEvent(new Event("toggle"));
+  assert.equal(f.header.canvas.height, 82);
+  assert.equal(f.frames.size, 0);
 });
 
 test("the first wiped area survives arbitrary cursor travel instead of a distance or sample cutoff", () => {
