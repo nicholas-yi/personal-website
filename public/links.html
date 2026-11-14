@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f8f7f2">
     <meta name="description" content="Nicholas Yi's public work: papers, writing, competition results, and speech accessibility projects.">
-    <title>Links &amp; milestones - Nicholas Yi</title>
+    <title>Field notes &amp; milestones - Nicholas Yi</title>
     <link rel="canonical" href="https://nicholasyi.me/links">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Nicholas Yi">
-    <meta property="og:title" content="Links &amp; milestones - Nicholas Yi">
+    <meta property="og:title" content="Field notes &amp; milestones - Nicholas Yi">
     <meta property="og:description" content="Papers, field notes, competition results, and speech accessibility projects.">
     <meta property="og:url" content="https://nicholasyi.me/links">
     <meta property="og:image" content="https://nicholasyi.me/social-card.png">
@@ -25,6 +25,7 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="theme.css">
     <script type="module" src="garden.js"></script>
+    <script type="module" src="writing-review.js"></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -36,7 +37,7 @@
           <a href="index.html#work">work</a>
           <a href="index.html#play">play</a>
           <a href="about.html">about</a>
-          <a href="links.html" aria-current="page">links</a>
+          <a href="links.html" aria-current="page">field notes</a>
         </nav>
       </header>
       <main id="main" class="links-main" tabindex="-1">
@@ -54,7 +55,7 @@
 +=====================================+</pre>
           </div>
           <div class="house-body">
-        <h1>Links &amp; little milestones<span class="name-period">.</span></h1>
+        <h1>Field notes &amp; little milestones<span class="name-period">.</span></h1>
         <p class="links-intro">Papers, field notes, competition results, and a project about making more voices heard.</p>
         <ul class="social-links" aria-label="Find me online">
           <li><a href="mailto:nicholasyiofficial@gmail.com">email <span aria-hidden="true">&#8599;</span></a></li>
@@ -96,17 +97,15 @@
                     <button class="copy-action" type="button" data-copy-note="stashbird-case-study" aria-label="Copy link to When a conversation changes" hidden>copy note link</button>
                     <span class="copy-status" role="status" aria-live="polite" aria-atomic="true"></span>
                   </div>
-                  <p>I keep coming back to memory because of the expectation underneath it: remember what I said, but also notice when I no longer mean it. A plan gets revised, a preference changes, a detail that once seemed important becomes something I would rather leave behind. The conversation continues. What should the memory do?</p>
-                  <p>There is a difference between remembering an earlier version of something and continuing to treat that version as true. I think that difference becomes especially interesting in a shared conversation, where a fact can have more than one source, and removing one person's message does not necessarily remove every reason to keep it.</p>
-                  <p>Stashbird works with that distinction. Conversation episodes remain connected to the entities and relations derived from them, so a later change can be traced through the memory rather than simply appended beside it.</p>
+                  <p>I want an agent to remember what I said. I also want to be allowed to stop meaning it. A plan is still a plan when I change the time; a preference can be sincere without being permanent. Neither feels like an unusual thing to ask of a conversation.</p>
+                  <p>It becomes less straightforward when the conversation has already been turned into something else. A message becomes an entity, a relation, a searchable passage. It might also lend a few words to a summary that no longer makes its source obvious. The original sentence is now doing work in places I cannot see.</p>
+                  <p class="story-aside">Removing the message is only the beginning. <em>What matters is whether its consequences still answer for me.</em></p>
+                  <p>That is the distinction I find interesting in Stashbird. Source episodes remain connected to the entities and relations derived from them. When the source changes, those connections give the memory a way to revise what it holds, rather than simply placing a newer sentence beside an older one and hoping retrieval chooses well.</p>
 
-                  <h4>The part I worked on</h4>
-                  <p>I co-authored Stashbird. My related memory work in Microsoft Teams included co-engineering provenance-aware memory and owning evaluation across memory systems and benchmarks. I used isolated runs, stage-level telemetry, and recovery to distinguish infrastructure failures from model-quality regressions.</p>
-                  <p>That is the less visible part of the work, but an important one. Before a result can tell us anything about memory, we need to understand what happened during ingestion, what retrieval returned, and whether the run actually reached an answer. Otherwise, a failure somewhere along the way can become a conclusion about the model. This is a team project; the method below comes from our co-authored paper.</p>
-
-                  <h4>What survives a correction?</h4>
-                  <p>Suppose two episodes support the same relation. Deleting one should withdraw its contribution, without pretending the other episode never existed. In Stashbird, repeated evidence adds support; a correction supersedes the active relation while keeping its earlier version as history. When the last supporting episode is removed, the unsupported relation leaves both the graph and the search index.</p>
-                  <p>Even then, the structure needs some care. An entity without remaining evidence may still connect surviving neighbors. The published method can retain that connective identity while clearing the metadata derived from the deleted episode. Affected community summaries leave retrieval until they are regenerated. There would be little point in removing something from the graph if a stale summary could quietly bring it back.</p>
+                  <h4>What still has a reason to stay?</h4>
+                  <p>Suppose two episodes support the same relation. Deleting one should withdraw its contribution, but it should not pretend that the other episode never happened. In Stashbird, repeated evidence extends a relation's support. A correction supersedes the active relation while retaining its earlier version as history. When the last supporting episode is removed, the unsupported relation leaves both the graph and the search index.</p>
+                  <p>There is an awkward case underneath that tidy description. An entity can lose the evidence behind its metadata and still connect surviving neighbors. Removing it entirely could disturb information that still has support. The published method can retain the connective identity while clearing the unsupported metadata; affected community summaries leave retrieval until they are regenerated.</p>
+                  <p>So the question is not simply whether something is present in the graph. It is what that remaining structure is allowed to tell us. Keeping a connection is not permission to keep every claim once attached to it.</p>
                   <figure class="story-diagram">
                     <pre data-window-ink aria-hidden="true">source episodes
       |
@@ -123,8 +122,10 @@ reconcile each view</pre>
                     <figcaption>A change in the source has to reach what the agent can actually retrieve.</figcaption>
                   </figure>
 
-                  <p>The paper tests question answering separately from controlled updates and deletions. That separation matters to me: recalling a fact is one question, and knowing whether it should still be available is another.</p>
-                  <p>I am interested in memory that leaves room for a conversation to change, without losing the context that made it meaningful in the first place. Some things still have support. Some things no longer do. The difficult part is knowing which is which.</p>
+                  <h4>What the test can tell us</h4>
+                  <p>The paper separates question answering from controlled updates and deletions. In the lifecycle studies, <strong>semantic decisions are held fixed</strong>, so the experiment can isolate whether reconciliation reaches the intended state. That is useful evidence about the mechanism. It is not, on its own, evidence that every model-generated interpretation of a conversation will be right.</p>
+                  <p>I co-authored Stashbird. My related work in Microsoft Teams included co-engineering provenance-aware memory and owning evaluation across memory systems and benchmarks. Isolated runs, stage-level telemetry, and recovery helped distinguish infrastructure failures from model-quality regressions. This is a team project; the method described here comes from our co-authored paper.</p>
+                  <p>I want memory that leaves room for a conversation to change. But I do not think that means keeping less indiscriminately, any more than remembering well means keeping everything. It means being able to explain why a fact is still there, and to let it go when that explanation no longer holds.</p>
                   <p class="story-related">The evaluation side of that question: <a href="#evaluation-field-note">What makes an evaluation trustworthy?</a></p>
                   <p class="story-sources">Method and published experiments: <a href="https://arxiv.org/html/2609.34242v2">Stashbird, version 2</a>.</p>
                 </article>
@@ -179,8 +180,8 @@ reconcile each view</pre>
                 <button class="copy-action" type="button" data-copy-note="evaluation-field-note" aria-label="Copy link to What makes an evaluation trustworthy?" hidden>copy note link</button>
                 <span class="copy-status" role="status" aria-live="polite" aria-atomic="true"></span>
               </div>
-              <p>It is easy to want a number to settle a question. Especially a question as open-ended as whether an agent is getting better. A higher score gives the work somewhere to land, something to compare, something that looks like progress.</p>
-              <p>And I do want that comparison. I just want to understand what the number is carrying with it.</p>
+              <p>A better score is reassuring. I do not think that reassurance is necessarily misplaced; a comparison can tell us something real. I just want to know which comparison we actually made.</p>
+              <p>Was the answer wrong, or did the run never reach an answer? It is a small distinction until both attempts become the same cell in a table. Then the distinction is most of what I need to understand.</p>
 
               <p class="story-related"><a href="/notes/evaluation">Read the full field note <span aria-hidden="true">&#8594;</span></a>.</p>
               <p class="story-related">The memory example: <a href="#stashbird-case-study">When a conversation changes</a>.</p>

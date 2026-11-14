@@ -1,5 +1,15 @@
 # Rain recording credits
 
+## Reading and navigation refinement
+
+The navigation and page title now say Field Notes; the existing `/links` canonical URL and fragments remain supported. Home has a small Field Notes link beside More Work, not an extra section. The narrow window uses an 8.1em pane and compact 220px scene, preserving the exact introduction. Narrow graph layouts use the same ten nodes in two columns and five rows, with 12px compact labels and at least 44px targets. Desktop retains the constellation. At the user's request, the Microsoft project heading retains the full employer name, Microsoft AI Development and Acceleration.
+
+`links.html?review=writing#writing-review` shows the requested original/revised prose comparison. Exact original public drafts were captured from revision `c854bec` before editing. Ordinary pages load no comparison payload; the small query-gated loader fetches the original snapshot and revised full evaluation note only in review mode. This is a review gate, not private access control. Both versions support native disclosures, narrow layouts, and lamplight. Claims remain attributed to the co-authored paper, including the fixed-semantic-decisions limit; no invented experiences or private metrics were added. The evaluation excerpt and standalone opening remain identical.
+
+Archery and resume content are unchanged. The README now describes the deployed Cloudflare Web Analytics beacon and the sound-off default accurately; no Cloudflare analytics settings were changed.
+
+## Recordings
+
 The ambience uses two Creative Commons Zero (CC0) field recordings, not a synthesized white-noise bed:
 
 | Local excerpt | Original recording | Creator | Source copy |

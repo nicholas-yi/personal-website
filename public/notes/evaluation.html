@@ -37,7 +37,7 @@
           <a href="/index.html#work">work</a>
           <a href="/index.html#play">play</a>
           <a href="/about.html">about</a>
-          <a href="/links.html">links</a>
+          <a href="/links.html">field notes</a>
         </nav>
       </header>
       <main id="main" class="links-main" tabindex="-1">
@@ -46,18 +46,21 @@
           <h1 id="note-heading">What makes an evaluation trustworthy?</h1>
           <p class="links-intro">On the distance between a reassuring number and a result worth trusting.</p>
           <div class="story-copy">
-            <p>It is easy to want a number to settle a question. Especially a question as open-ended as whether an agent is getting better. A higher score gives the work somewhere to land, something to compare, something that looks like progress.</p>
-            <p>And I do want that comparison. I just want to understand what the number is carrying with it.</p>
+            <p>A better score is reassuring. I do not think that reassurance is necessarily misplaced; a comparison can tell us something real. I just want to know which comparison we actually made.</p>
+            <p>Was the answer wrong, or did the run never reach an answer? It is a small distinction until both attempts become the same cell in a table. Then the distinction is most of what I need to understand.</p>
 
             <h2>What actually happened?</h2>
-            <p>An incorrect answer, an unfinished ingestion run, and a judge that never returned a usable grade can all leave an experiment without the result we hoped for. They do not tell the same story. One may reveal a limitation in the system; another may tell us that we have not really tested it yet.</p>
-            <p>Keeping that distinction does not mean making the inconvenient attempts disappear. I want the failed runs to remain visible, with enough evidence to say where they stopped and what was (or was not) measured. There is something misleading about a clean comparison that became clean only after its complications were removed.</p>
+            <p>If a run produces an incorrect answer, it has failed the task. If ingestion times out before retrieval, there may be no answer to evaluate. A judge can also fail to return a usable grade. Each attempt leaves us without the result we wanted, but the missing result does not tell us the same thing.</p>
+            <p>A completed-run accuracy score can still be useful. It asks how often the system was right among the attempts we could grade. The complication is that a system can answer those questions well and frequently fail before it gets that far.</p>
+            <p class="story-aside"><em>I want both numbers.</em> How well did it answer, and how often did it reach an answer at all?</p>
+            <p>Keeping that distinction does not mean making the inconvenient attempts disappear. An unfinished run belongs in the record, with its failure stage and missing grade intact. Otherwise, the table can become more reassuring precisely because we have removed the part that made the experiment difficult.</p>
 
-            <p>Isolation, stage-level telemetry, and recoverable runs help preserve that context. So do the inputs, the configuration, and an explanation of what was held fixed. If both the system and the setup changed, repeating the experiment will not, on its own, tell us which change mattered.</p>
+            <p>That is why I care about isolation, stage-level telemetry, and recoverable runs. They help keep the evidence behind a comparison visible. A retry can be sensible (sometimes the infrastructure really did interrupt the work), but it should not quietly replace the attempt that came before it. The inputs, configuration, and what was held fixed matter too. If the system and the setup both changed, another run cannot tell us which change deserved the credit.</p>
 
             <h2>What did the test ask?</h2>
-            <p>Memory makes this especially concrete. An agent can recall a fact correctly and still mishandle a later correction. A deleted source can leave information behind in a searchable summary. Stashbird's public evaluation keeps question answering separate from its update and deletion studies, because the ability to answer does not establish that the underlying state has been revised correctly.</p>
-            <p>I think of a result as a little piece of understanding, with boundaries around it. What did it establish, under which conditions, and what question remains? I would rather leave those boundaries visible than ask a single number to stand in for all of them.</p>
+            <p>Memory makes the boundary of a test particularly tangible. An agent might recall the time of a meeting correctly, then keep returning that time after the plan changes. A deleted source might still lend its words to a searchable summary. The earlier answer was correct. The state behind the later answer was not.</p>
+            <p>Stashbird's public evaluation separates question answering from its update and deletion studies because the ability to answer does not establish that the underlying state has been revised correctly. The controlled lifecycle studies hold semantic decisions fixed. That lets them test reconciliation without confusing it with the separate question of whether the model interpreted the conversation correctly.</p>
+            <p>I would rather have a result that answers a smaller question honestly than one that seems to settle everything. Not because I want less confidence in the work, but because I want the confidence to have somewhere solid to stand. A good score can be the beginning of that understanding. It should not have to be the end.</p>
             <p class="story-related">The memory example: <a href="/links#stashbird-case-study">When a conversation changes</a>.</p>
             <p class="story-sources">Example and experimental setup: <a href="https://arxiv.org/html/2609.34242v2#S3">Stashbird's published experiments</a>.</p>
           </div>

@@ -156,10 +156,8 @@
 .kg-node-label-compact { display: none; }
 [data-graph-compact="true"] .kg-node-label-full { display: none; }
 [data-graph-compact="true"] .kg-node-label-compact { display: inline; }
-[data-graph-compact="true"] .kg-node { width: 44px; min-width: 44px; max-width: 44px; height: 44px; padding: 2px; font-size: 0.56rem; text-align: center; }
-[data-graph-compact="true"] .kg-node-face { flex-direction: column; gap: 2px; width: 100%; }
-[data-graph-compact="true"] .kg-node[data-node-id="microsoft"],
-[data-graph-compact="true"] .kg-node[data-node-id="stashbird"] { width: 53px; min-width: 53px; max-width: 53px; padding: 1px; }
+[data-graph-compact="true"] .kg-node { min-width: 44px; max-width: calc(50% - 28px); min-height: 44px; padding: 6px 7px; font-size: 0.75rem; text-align: center; }
+[data-graph-compact="true"] .kg-node-face { gap: 5px; width: 100%; }
 
 .kg-node:hover,
 .kg-node:focus-visible,

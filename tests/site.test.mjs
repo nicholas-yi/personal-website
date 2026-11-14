@@ -142,7 +142,7 @@ test("all pages restore a manual palette before CSS and provide an independent a
   assert.ok(!css.includes("invert(") && !css.includes("@keyframes"));
 });
 
-test("the public README preserves the supplied wording except the approved recording credits", async () => {
+test("the public README preserves the supplied wording with accurate sound and analytics descriptions", async () => {
   const readme = await readFile(new URL("../README.md", import.meta.url), "utf8");
   assert.equal(readme.replace(/\r\n/g, "\n"), `# nicholasyi.me
 
@@ -154,10 +154,10 @@ it's where i keep my research, writing, and a few things i'm into. it also rains
 
 - **the rain** — move your cursor through it and it'll part around you. it drips off the roof and ripples the puddle at the bottom
 - **umbrellas** — click to open one. click again to fold it. i always have so many extra ones, feel free to ask me for one...
-- **sound** — on by default. click around for more. natural rain and fireplace recordings, with little click sounds made in browser
+- **sound** — off by default; turn it on if you'd like. natural rain and fireplace recordings, with little click sounds made in browser
 - **the graph** — connect my interests and see how they're related
 
-no frameworks, no build step, no tracking. just good ole html, css, and js.
+no frameworks, no build step. just good ole html, css, and js. the live site uses cloudflare web analytics.
 
 ## running it
 
@@ -214,7 +214,7 @@ test("all pages use the same simple navigation without the removed notes destina
   for (const path of ["/", "/links.html", "/about.html", "/notes/evaluation"]) {
     const html = await (await fetch(`${origin}${path}`)).text();
     const nav = html.match(/<nav aria-label="Main navigation">([\s\S]*?)<\/nav>/)[1];
-    assert.deepEqual([...nav.matchAll(/<a\b[^>]*>([^<]+)<\/a>/g)].map((match) => match[1]), ["work", "play", "about", "links"]);
+    assert.deepEqual([...nav.matchAll(/<a\b[^>]*>([^<]+)<\/a>/g)].map((match) => match[1]), ["work", "play", "about", "field notes"]);
     assert.ok(!html.includes("#notes") && !html.includes("type-proof"));
   }
   const home = await (await fetch(origin)).text();
@@ -549,6 +549,7 @@ test("the requested headline and interests stay verbatim, while employer naming 
   assert.ok(!html.includes("I'm also drawn to accessibility technology, especially speech systems that work better for people who stutter."));
   for (const path of ["/", "/links.html"]) {
     const page = await (await fetch(`${origin}${path}`)).text();
+    assert.ok(page.includes('class="eyebrow">Microsoft AI Development and Acceleration'));
     assert.ok(page.includes('href="https://microsoft.ai/">Microsoft AI Development and Acceleration'));
   }
   for (const copy of [
@@ -908,7 +909,8 @@ test("the fireplace companions are ordinary accessible Spotify and email links",
   assert.equal((row.match(/<pre class="(?:record-art|mailbox-art)" aria-hidden="true">/g) || []).length, 2);
   assert.ok(row.includes('class="spotify-preview"'));
   assert.ok(!row.includes("?si="));
-  assert.ok(html.includes('href="links.html">More work <span aria-hidden="true">&#8594;</span>'));
+  assert.ok(html.includes('href="links.html#public-links-heading">More work <span aria-hidden="true">&#8594;</span>'));
+  assert.ok(html.includes('href="links.html#field-notes-heading">Field notes'));
   assert.ok(!html.includes("More links, competition results, and earlier experiments"));
 });
 
@@ -1040,7 +1042,7 @@ test("case study and field note are native collapsed disclosures on Links, not e
   assert.ok(!html.includes("rotation"));
   assert.ok(html.includes("I co-authored Stashbird."));
   assert.ok(html.includes("owning evaluation across memory systems and benchmarks"));
-  assert.ok(html.includes("This is a team project; the method below comes from our co-authored paper."));
+  assert.ok(html.includes("This is a team project; the method described here comes from our co-authored paper."));
   for (const forbidden of ["76.4", "planned organization-wide", "phone number", "5,000"]) assert.ok(!stories.some(story => story[2].includes(forbidden)));
   const home = await (await fetch(origin)).text();
   assert.ok(!home.includes("work-story") && !home.includes("Thinking out loud"));
@@ -1067,8 +1069,8 @@ test("reflective writing drops the template headings while retaining evidence an
   const stories = [...html.matchAll(/<details class="work-story" id="[^"]+">([\s\S]*?)<\/details>/g)].map(match => match[1]);
   const note = await (await fetch(`${origin}/notes/evaluation`)).text();
   const text = `${stories.join(" ")} ${note}`;
-  assert.ok(text.includes("remember what I said, but also notice when I no longer mean it"));
-  assert.ok(text.includes("what was (or was not) measured"));
+  assert.ok(text.includes("I want an agent to remember what I said. I also want to be allowed to stop meaning it."));
+  assert.ok(text.includes("semantic decisions") && text.includes("held fixed"));
   assert.ok(text.includes("I co-authored Stashbird."));
   assert.ok(text.includes("owning evaluation across memory systems and benchmarks"));
   for (const heading of ["The problem", "The design tradeoff", "What the evidence establishes", "Separate the kinds of failure", "Make comparisons inspectable", "Test the promise you actually make"]) {
@@ -1193,6 +1195,6 @@ test("the standalone evaluation note is readable without script and keeps nested
   const entry = links.match(/<details class="work-story" id="evaluation-field-note">([\s\S]*?)<\/details>/)[1];
   assert.ok(entry.includes('data-copy-note="evaluation-field-note"'));
   assert.ok(entry.includes('href="/notes/evaluation"'));
-  assert.ok(entry.includes("It is easy to want a number to settle a question."));
+  assert.ok(entry.includes("A better score is reassuring."));
   assert.ok(!entry.includes("What actually happened?"));
 });

@@ -26,6 +26,7 @@
   :root[data-theme="lamplight"] :is(.work-copy > .project-context, .work-story > summary span, .story-copy .story-sources) { color: var(--muted); }
   :root[data-theme="lamplight"] :is(.work-copy > .project-recognition, .public-link-entry > .project-recognition, .external-arrow, .name-period, .intro-line) { color: var(--green); }
   :root[data-theme="lamplight"] .note-dash { background: #927d56; }
+  :root[data-theme="lamplight"] .story-copy .story-aside { color: var(--ink); }
   :root[data-theme="lamplight"] .site-header { background: rgb(58 51 40 / 92.5%); border-color: #776346; box-shadow: 0 3px 16px #100e0b40; }
   :root[data-theme="lamplight"] .site-header[data-glass="ready"] {
     background: linear-gradient(115deg, #ab87403b, #24231f0d 45%, #77614938), rgb(58 51 40 / 12%);

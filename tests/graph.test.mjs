@@ -239,9 +239,9 @@ test("the smooth SVG helper retains both endpoints without depending on DOM or p
   assert.equal(strokePath([{ x: 0, y: 0 }], desktop).ok, true);
 });
 
-test("the constellation uses one physical radius, not an ellipse, at every breakpoint", () => {
+test("the desktop constellation keeps one physical radius rather than an ellipse", () => {
   const sketch = createSketch();
-  for (const width of [265, 288, 358, 620, 804]) {
+  for (const width of [740, 804, 1028]) {
     const height = Math.max(330, Math.min(560, width * 0.7));
     const compact = width < MOBILE_BREAKPOINT;
     const labels = Object.fromEntries(sketch.nodes.map((node) => [node.id, {
@@ -264,6 +264,22 @@ test("the constellation uses one physical radius, not an ellipse, at every break
         const overlaps = Math.abs(a.x - b.x) * width < (labels[a.id].width + labels[b.id].width) / 2 &&
           Math.abs(a.y - b.y) * height < 44;
         assert.equal(overlaps, false, `Labels ${a.id}/${b.id} overlap at ${width}px`);
+      }
+    }
+  }
+});
+
+test("readable mobile labels have two separated columns and five rows without changing node identities", () => {
+  const sketch = createSketch();
+  const labels = Object.fromEntries(sketch.nodes.map(node => [node.id, { width: 100, height: 44, padding: 10 }]));
+  for (const width of [256, 280, 340, 620]) {
+    const result = layoutNodes(sketch.nodes, { width, height: 330 }, labels);
+    assert.equal(result.ok, true);
+    assert.deepEqual(result.nodes.map(node => node.id), sketch.nodes.map(node => node.id));
+    for (const node of result.nodes) {
+      for (const other of result.nodes) {
+        if (node === other) continue;
+        assert.ok(Math.abs(node.x - other.x) * width >= 112 || Math.abs(node.y - other.y) * 330 >= 56);
       }
     }
   }

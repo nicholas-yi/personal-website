@@ -179,6 +179,23 @@ export function layoutNodes(nodes, layout, labels = {}) {
   if (!labels || typeof labels !== "object" || Array.isArray(labels)) {
     return failure("invalid-label-size", "The paper needs a map of label dimensions.");
   }
+  if (layout.width < MOBILE_BREAKPOINT) {
+    const rows = Math.ceil(nodes.length / 2);
+    const ordered = [...nodes].sort((a, b) => {
+      const vertical = Math.sin(a.angle) - Math.sin(b.angle);
+      return Math.abs(vertical) > 1e-8 ? vertical : Math.cos(a.angle) - Math.cos(b.angle);
+    });
+    const positions = new Map();
+    for (const [index, node] of ordered.entries()) {
+      const result = clampPosition({
+        x: index % 2 ? 0.75 : 0.25,
+        y: (Math.floor(index / 2) + 0.5) / rows,
+      }, layout, labels[node.id]);
+      if (!result.ok) return result;
+      positions.set(node.id, result.point);
+    }
+    return { ok: true, nodes: nodes.map(node => ({ ...node, ...positions.get(node.id) })) };
+  }
   let radius = Infinity;
   for (const node of nodes) {
     const dimensions = labels[node.id];

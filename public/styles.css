@@ -167,6 +167,20 @@ h3 a:is(:hover, :focus-visible) .external-arrow, .social-links a:is(:hover, :foc
 .story-copy > p + p { margin-top: 16px; }
 .story-copy .story-related { margin-top: 24px; }
 .story-copy .story-sources { margin-top: 16px; color: var(--muted); font-size: 14px; }
+.story-copy .story-aside { margin: 24px 0 24px 12px; padding: 8px 0 8px 18px; border-left: 1px solid var(--green); color: var(--ink); }
+.writing-review { margin: 32px 0 40px; padding-top: 24px; border-top: 1px dashed var(--green); scroll-margin-top: 110px; }
+.writing-review > p { margin: 14px 0; color: var(--muted); font: 14px/1.7 var(--serif); }
+.writing-review > a { display: inline-block; min-height: 44px; font: 12px/1.7 var(--mono); padding-block: 8px; }
+.writing-comparison { margin-top: 24px; }
+.writing-comparison > summary { min-height: 44px; cursor: pointer; color: var(--green); font: 21px/1.5 var(--serif); padding-block: 10px; }
+.writing-versions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-top: 12px; }
+.writing-version { min-width: 0; border-top: 1px solid var(--line); padding-top: 14px; }
+.writing-version > h3 { margin: 0; color: var(--green); font: 12px/1.7 var(--mono); letter-spacing: .04em; }
+.writing-version .story-copy { margin-top: 16px; max-width: none; }
+.writing-version pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.writing-review .review-provenance { margin-top: 24px; font: 11px/1.7 var(--mono); }
+.review-error { margin-top: 18px; color: var(--ink); font: 14px/1.7 var(--serif); }
+@media (max-width: 800px) { .writing-versions { grid-template-columns: minmax(0, 1fr); } }
 .copy-tools { min-width: 0; }
 .copy-action { min-height: 44px; padding: 8px; border: 0; background: transparent; color: var(--green); font: 11px/1.5 var(--mono); text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
 .copy-action:is(:disabled, [aria-disabled="true"]) { cursor: progress; }
@@ -440,10 +454,19 @@ h3 a:is(:hover, :focus-visible) .external-arrow, .social-links a:is(:hover, :foc
   .page { padding: 0 25px; }
   .site-header { padding: 16px 11px; }
   body { font-size: 16px; }
-  nav { gap: clamp(4px, 2vw, 13px); font-size: 12px; }
-  .intro { padding: 49px 0 54px; }
+  .site-header { gap: 6px; }
+  nav { gap: 4px; font-size: 12px; }
+  .intro { gap: 18px; padding-block: 32px; }
+  .rain-window { width: min(100%, 220px); }
+  .window-scene { width: 42ch; font-size: 8px; }
+  .rain-pane { height: 8.1em; }
+  .window-mullion { height: 100%; overflow: hidden; }
+  .window-shutter { height: 100%; overflow: hidden; }
+  .window-objects { padding-top: 8px; }
+  .window-caption { font-size: 12px; margin-top: 6px; }
+  .garden-note { margin-top: 20px; }
   h1 { font-size: 55px; letter-spacing: -2.6px; }
-  .intro-line { font-size: 26px; }
+  .intro-line { font-size: 26px; margin-block: 16px 20px; }
   .intro-copy, .links-intro, .about-copy p, .work-copy > p, .public-link-entry > p { font-size: 16px; }
   .about-education { font-size: 16px; }
   .work-copy > .project-recognition, .work-copy > .project-context, .public-link-entry > .project-recognition { font-size: 13px; }
