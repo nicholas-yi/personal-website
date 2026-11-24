@@ -20,6 +20,10 @@ no frameworks, no build step. just good ole html, css, and js. the live site use
 
 ## how it ships
 
-push to `main` → tests run → cloudflare deploys it. if a test fails, nothing goes live.
+push to `main` → GitHub Actions runs tests, and the configured Cloudflare integration deploys it.
+
+run `npm test` before pushing, then check both the Actions result and Cloudflare deployment. the repository's workflow runs tests but does not itself gate Cloudflare deployment.
+
+Spotify setup and recovery: [connect the turntable](SPOTIFY-SETUP.md).
 
 the ascii art, animation, and interaction sounds are original. the rain and fireplace recordings are CC0; see [credits](AUDIO-CREDITS.md). feel free to look around.

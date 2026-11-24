@@ -46,16 +46,6 @@ export function activateUmbrella(umbrella, x, y, width, height, still = false) {
   }
 }
 
-export function toggleUmbrella(umbrella, x, y, width, height, still = false) {
-  checkPosition(x, y, width, height);
-  if (!umbrella.open) {
-    positionUmbrella(umbrella, x, y, width, height);
-    umbrella.placed = true;
-  }
-  umbrella.open = !umbrella.open;
-  if (still) umbrella.progress = Number(umbrella.open);
-}
-
 export function stepUmbrella(umbrella, elapsed) {
   if (!Number.isFinite(elapsed)) throw new TypeError("Umbrella timing must be finite.");
   const target = Number(umbrella.open);

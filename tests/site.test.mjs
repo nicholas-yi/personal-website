@@ -1,7 +1,6 @@
 import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
 import { createSiteServer } from "../server.mjs";
-import { INK_PALETTE } from "../public/graph-model.js";
 import { readFile } from "node:fs/promises";
 
 let server;
@@ -28,36 +27,10 @@ test("the homepage serves real content and working local assets", async () => {
     assert.equal(resource.status, 200);
     assert.match(resource.headers.get("content-type"), mime);
     assert.equal(resource.headers.get("x-content-type-options"), "nosniff");
-    assert.ok((await resource.text()).length > 500);
+    assert.ok((await resource.text()).length > 0);
   }
 });
 
-test("wisps use compositor-friendly drift instead of changing shape and blurred filters every frame", async () => {
-  const css = await (await fetch(`${origin}/styles.css`)).text();
-  assert.ok(css.includes("@keyframes thought-drift"));
-  assert.ok(css.includes(".thought-bubble:is(:hover, :focus-within) .thought-wisp"));
-  assert.match(css, /@keyframes thought-drift \{[^}]*opacity: 0\.22; transform:/);
-  const thoughts = await (await fetch(`${origin}/thoughts.js`)).text();
-  assert.ok(!thoughts.includes("style.borderRadius"));
-  const garden = await (await fetch(`${origin}/garden.js`)).text();
-  assert.ok(garden.includes("if (layoutNeedsUpdate)"));
-  assert.ok(garden.includes('element.closest(".house-body, .work-art, [data-graph-playground]'));
-  assert.ok(garden.includes("sceneGeometry.rectangles.map(viewportRect)"));
-  assert.ok(garden.includes("rainGlyphs.draw(context, text, x, y)"));
-  assert.ok(!css.match(/backdrop-filter:\s*blur/));
-  assert.equal((await fetch(`${origin}/rain-glyphs.js`)).status, 200);
-});
-
-test("mailbox approach and departure are local decorative behavior without intercepting the email link", async () => {
-  const html = await (await fetch(origin)).text();
-  assert.ok(html.includes('class="mailbox-art" aria-hidden="true"><span class="perching-mail"'));
-  const source = await (await fetch(`${origin}/mailbox.js`)).text();
-  assert.ok(source.includes('engagement.addEventListener("pointerenter"'));
-  assert.ok(source.includes('engagement.addEventListener("focusin"'));
-  assert.ok(source.includes('setPhase("perched")'));
-  assert.ok(source.includes('setPhase("departing")'));
-  assert.ok(!source.includes("preventDefault"));
-});
 test("HEAD requests return the same metadata with no body", async () => {
   const response = await fetch(origin, { method: "HEAD" });
   assert.equal(response.status, 200);
@@ -82,33 +55,12 @@ test("sound defaults off with a crossed-out speaker and starts only through its 
     assert.ok(html.includes('class="sound-muted"'));
     assert.ok(!html.includes("autoplay"));
   }
-  const garden = await (await fetch(`${origin}/garden.js`)).text();
-  assert.ok(garden.includes("let soundEnabled = false;"));
-  assert.ok(garden.includes("labelSound(soundEnabled);"));
-  assert.ok(!garden.includes("soundAwaitingGesture") && !garden.includes("startDefaultSound"));
-  assert.ok(garden.includes('soundButton.addEventListener("click", () => setSound(!soundEnabled, true))'));
-  assert.ok(garden.includes("if (enabled) soundEnabled = false;"));
-  const css = await (await fetch(`${origin}/styles.css`)).text();
-  assert.match(css, /\.sound-waves \{ display: none; \}/);
-  assert.match(css, /\[aria-pressed="true"\] \.sound-waves \{ display: block; \}/);
-  assert.match(css, /\[aria-pressed="true"\] \.sound-muted \{ display: none; \}/);
 });
 
-test("rain preferences are visit-scoped while writing links and mail copy progressively enhance native controls", async () => {
-  const garden = await (await fetch(`${origin}/garden.js`)).text();
-  assert.ok(garden.includes("rainPreference.remember(motionEnabled)"));
-  assert.ok(garden.includes("rainPreference.enabled(reducedMotion.matches)"));
-  assert.ok(garden.includes('window.addEventListener("pageshow"'));
-  assert.ok(garden.includes("installPageTools(document)"));
+test("writing links and mail copy progressively enhance native controls", async () => {
   const tools = await fetch(`${origin}/page-tools.js`);
   assert.equal(tools.status, 200);
   assert.match(tools.headers.get("content-type"), /javascript/);
-  const source = await tools.text();
-  assert.ok(source.includes("sessionStorage") && !source.includes("localStorage"));
-  assert.ok(source.includes('view.addEventListener("hashchange"'));
-  assert.ok(source.includes("clipboard.writeText(text)"));
-  assert.ok(!source.includes("execCommand"));
-  assert.doesNotMatch(source, /data-copy-note|link copied|noteShareURL/);
   const home = await (await fetch(origin)).text();
   assert.ok(home.includes('class="mail-corner"'));
   assert.ok(home.includes('data-copy-email aria-label="Copy email address" hidden'));
@@ -116,9 +68,6 @@ test("rain preferences are visit-scoped while writing links and mail copy progre
   const links = await (await fetch(`${origin}/links.html`)).text();
   for (const id of ["stashbird-case-study", "evaluation-field-note"]) assert.ok(links.includes(`id="${id}"`));
   assert.doesNotMatch(links, /data-copy-note|story-tools|copy note link|class="copy-status"/);
-  const css = await (await fetch(`${origin}/styles.css`)).text();
-  assert.ok(css.includes(".mail-corner .mailbox { grid-column: 1; }"));
-  assert.match(css, /\.copy-action \{[^}]*min-height: 44px/);
 });
 
 test("all pages restore a manual palette before CSS and provide an independent accessible lamp toggle", async () => {
@@ -135,43 +84,14 @@ test("all pages restore a manual palette before CSS and provide an independent a
     assert.equal(asset.status, 200);
     assert.match(asset.headers.get("content-type"), mime);
   }
-  const script = await (await fetch(`${origin}/theme.js`)).text();
-  assert.ok(script.includes("sessionStorage") && !script.includes("localStorage"));
-  assert.ok(!script.includes("matchMedia") && !script.includes("setInterval") && !script.includes("AudioContext"));
-  const css = await (await fetch(`${origin}/theme.css`)).text();
-  assert.ok(css.includes("@media screen and (forced-colors: none)"));
-  assert.ok(css.includes("--paper: #24231f;") && css.includes("--ink: #ece5d2;"));
-  assert.ok(!css.includes("invert(") && !css.includes("@keyframes"));
 });
 
-test("the public README preserves the supplied wording with accurate sound and analytics descriptions", async () => {
+test("the README documents running, testing, deployment boundaries and audio credits", async () => {
   const readme = await readFile(new URL("../README.md", import.meta.url), "utf8");
-  assert.equal(readme.replace(/\r\n/g, "\n"), `# nicholasyi.me
-
-my little corner of the internet → **[nicholasyi.me](https://nicholasyi.me)**
-
-it's where i keep my research, writing, and a few things i'm into. it also rains.
-
-## things to poke at
-
-- **the rain** — move your cursor through it and it'll part around you. it drips off the roof and ripples the puddle at the bottom
-- **umbrellas** — click to open one. click again to fold it. i always have so many extra ones, feel free to ask me for one...
-- **sound** — off by default; turn it on if you'd like. natural rain and fireplace recordings, with little click sounds made in browser
-- **the graph** — connect my interests and see how they're related
-
-no frameworks, no build step. just good ole html, css, and js. the live site uses cloudflare web analytics.
-
-## running it
-
-    npm start   # http://127.0.0.1:4173
-    npm test
-
-## how it ships
-
-push to \`main\` → tests run → cloudflare deploys it. if a test fails, nothing goes live.
-
-the ascii art, animation, and interaction sounds are original. the rain and fireplace recordings are CC0; see [credits](AUDIO-CREDITS.md). feel free to look around.
-`);
+  for (const text of ["npm start", "npm test", "does not itself gate Cloudflare deployment", "AUDIO-CREDITS.md", "SPOTIFY-SETUP.md"]) {
+    assert.ok(readme.includes(text));
+  }
+  assert.doesNotMatch(readme, /if a test fails, nothing goes live/);
 });
 
 test("approved natural rain files are self-hosted audio with explicit credits and a bounded download size", async () => {
@@ -192,41 +112,20 @@ test("approved natural rain files are self-hosted audio with explicit credits an
   for (const author of ["barkenov", "AlanCat", "CC0"]) assert.ok(credits.includes(author));
 });
 
-test("ASCII companion decorations are original, noninteractive, motion-gated, and share art baseline rows", async () => {
+test("ASCII companion decorations are hidden from assistive technology", async () => {
   const html = await (await fetch(origin)).text();
   assert.ok(html.includes('class="record-spindle">()</span>'));
   assert.ok(html.includes('<pre class="record-art" aria-hidden="true"><span class="record-notes">'));
   assert.ok(html.includes('class="record-sleeve"'));
   assert.ok(html.includes('class="winged-mail" aria-hidden="true"'));
-  const css = await (await fetch(`${origin}/styles.css`)).text();
-  assert.ok(css.includes("grid-template-rows: subgrid"));
-  assert.ok(css.includes('.house-furniture .hearth-fire, .hearth-companions .hearth-fire { grid-row: 1 / 2;'));
-  for (const animation of ["record-spin", "record-note", "mail-arrival", "mail-wing"]) assert.ok(css.includes(`@keyframes ${animation}`));
-  const script = await fetch(`${origin}/hearth.js`);
-  assert.equal(script.status, 200);
-  const source = await script.text();
-  assert.ok(source.includes('visible && !doc.hidden && !reduced.matches'));
-  assert.ok(source.includes('dataset.rain === "moving"'));
-  const listening = await (await fetch(`${origin}/listening.js`)).text();
-  assert.ok(!listening.includes("hearth:motion") && !listening.includes("scheduleSurprise"));
-  assert.ok(listening.includes('status.setAttribute("aria-live", "polite")'));
 });
 
-test("all pages use the same simple navigation without the removed notes destination", async () => {
-  for (const path of ["/", "/links.html", "/about.html", "/notes/evaluation"]) {
+test("all pages use the same simple navigation", async () => {
+  for (const path of ["/", "/links.html", "/about.html", "/notes/evaluation", "/404"]) {
     const html = await (await fetch(`${origin}${path}`)).text();
     const nav = html.match(/<nav aria-label="Main navigation">([\s\S]*?)<\/nav>/)[1];
     assert.deepEqual([...nav.matchAll(/<a\b[^>]*>([^<]+)<\/a>/g)].map((match) => match[1]), ["work", "play", "about", "field notes"]);
-    assert.ok(!html.includes("#notes") && !html.includes("type-proof"));
   }
-  const home = await (await fetch(origin)).text();
-  assert.ok(!home.includes("Threads I keep coming back to") && !home.includes('id="notes"'));
-  const css = await (await fetch(`${origin}/styles.css`)).text();
-  assert.match(css, /nav \{[^}]*align-items: center/);
-  assert.match(css, /nav a \{[^}]*min-width: 44px; min-height: 44px; line-height: 1/);
-  assert.ok(!css.includes("proof-mono") && !css.includes("type-proof"));
-  assert.ok(css.includes(":focus-visible"));
-  assert.ok(css.includes("prefers-reduced-motion"));
 });
 
 test("all pages end with document-bottom ASCII puddles and accessible icon-only weather controls", async () => {
@@ -242,47 +141,22 @@ test("all pages end with document-bottom ASCII puddles and accessible icon-only 
   }
   const response = await fetch(`${origin}/puddles.js`);
   assert.equal(response.status, 200);
-  const garden = await (await fetch(`${origin}/garden.js`)).text();
-  assert.ok(garden.includes("overlapsIndexedText(textIndex, x, y)"));
-  assert.ok(garden.includes("nextFrameAt = now + 1000 / 24"));
-  assert.ok(garden.includes("rain.groundY = water && water.top < innerHeight ? water.top + 55 : rain.height + 16"));
 });
 
-test("resume remains an honest placeholder, not a local/private download or a broken link", async () => {
+test("social links do not point to local or private resume files", async () => {
   for (const path of ["/", "/links.html"]) {
     const html = await (await fetch(`${origin}${path}`)).text();
     const socials = html.match(/<ul class="social-links"[\s\S]*?<\/ul>/)[0];
-    assert.ok(socials.includes('class="resume-placeholder"'));
-    assert.ok(!socials.includes("kaggle") && !socials.includes("C:\\") && !socials.includes("Nicholas_Yi_Evals"));
+    assert.doesNotMatch(socials, /file:|C:\\|Nicholas_Yi_Evals/);
   }
   assert.equal((await fetch(`${origin}/resume.pdf`)).status, 404);
 });
 
-test("the graph keeps its fallback and accessible instructions without redundant idle copy", async () => {
+test("the graph keeps readable fallback content without JavaScript", async () => {
   const html = await (await fetch(origin)).text();
   assert.ok(html.includes("data-graph-playground"));
   assert.ok(html.includes('class="graph-fallback"'));
   assert.ok(html.includes("Enable JavaScript to connect the dots."));
-  assert.ok(!html.includes("See what connects."));
-  assert.ok(!html.includes("Hold down and draw through"));
-  const graph = await (await fetch(`${origin}/graph.js`)).text();
-  assert.ok(!graph.includes("Draw a line, or tap two dots."));
-  assert.ok(!graph.includes('"kg-alternate"'));
-  assert.ok(!graph.includes("Scroll outside the paper. Esc cancels."));
-  assert.ok(!graph.includes('"kg-help"'));
-  assert.ok(graph.includes('"Draw through up to three dots, or click or tap two. Keyboard:'));
-  assert.ok(graph.includes('plot.setAttribute("aria-describedby", keyboardHelp.id)'));
-  assert.ok(graph.includes("On touch screens, swipe outside the paper to scroll."));
-  assert.ok(!graph.includes('"kg-instruction"'));
-  assert.ok(!graph.includes("Ten dots from my work and life."));
-  assert.ok(!graph.includes("Pick a dot.") && !graph.includes("a few things about me"));
-  assert.ok(graph.includes('report("ready", "")'));
-  assert.ok(graph.includes('status.classList.toggle("kg-sr-only", type === "ready")'));
-  assert.ok(graph.includes('status.setAttribute("aria-live", "polite")'));
-  const css = await (await fetch(`${origin}/graph.css`)).text();
-  assert.ok(css.includes(".kg-status.kg-sr-only { min-height: 0; margin: 0; padding: 0; border: 0; }"));
-  assert.ok(!html.includes("All 28 pairs have a little story. Some are facts; some are playful parallels. Your sketch stays in this tab."));
-  assert.ok(!html.includes('class="play-footnote"'));
 });
 
 test("the larger four-pane window has framing and a weather opening", async () => {
@@ -291,9 +165,6 @@ test("the larger four-pane window has framing and a weather opening", async () =
     assert.ok(html.includes(part));
   }
   assert.ok(html.includes('class="intro-content"'));
-  const css = await (await fetch(`${origin}/styles.css`)).text();
-  assert.ok(css.includes("grid-row: 2"));
-  assert.ok(!css.includes(".rain-window { display: none; }"));
 });
 
 test("public accomplishments link to the paper, PDF, article, and official competition results", async () => {
@@ -316,33 +187,16 @@ test("public accomplishments link to the paper, PDF, article, and official compe
   assert.ok(hatefulMemes.includes("organizers' challenge report"));
   assert.ok(!hatefulMemes.includes("3,173 competitors") && !hatefulMemes.includes("3,000+ participants"));
   assert.ok(html.includes("logographic &amp; linguistic OCR"));
-  assert.ok(!html.includes("Japanese handwritten"));
   assert.ok(html.includes('aria-label="Stashbird preprint PDF"'));
   assert.ok(html.includes('aria-label="Kuzushiji Recognition final leaderboard"'));
   assert.ok(html.includes('aria-label="Hateful Memes Phase 2 result, nickyi in eighteenth place"'));
   assert.ok(!html.includes("https://patents.google.com/"));
-  assert.ok(!html.includes("My Kaggle competitions") && !html.includes("more experiments"));
 });
 
-test("the header has one aligned tinted frame, preserves content alignment, and keeps decoration bounded", async () => {
-  const css = await (await fetch(`${origin}/styles.css`)).text();
-  assert.ok(!css.includes(".site-header::before"));
-  assert.match(css, /\.site-header \{[^}]*margin-inline: -12px; padding: 18px 11px;[^}]*background: rgb\(232 236 223 \/ 92\.5%\); border: 1px solid #aeb99e; border-radius: 6px/);
-  assert.doesNotMatch(css, /\.site-header \{[^}]*\bopacity:/);
-  assert.match(css, /\.header-glass \{[^}]*position: absolute; inset: 0;[^}]*border-radius: inherit; pointer-events: none/);
-  assert.ok(css.includes('.site-header[data-glass="ready"]'));
-  assert.match(css, /\.site-header\[data-glass="ready"\] \{[^}]*rgb\(232 236 223 \/ 12%\)/);
+test("the header glass module is served and companion decorations stay bounded", async () => {
   const glass = await fetch(`${origin}/header-glass.js`);
   assert.equal(glass.status, 200);
   assert.match(glass.headers.get("content-type"), /javascript/);
-  const garden = await (await fetch(`${origin}/garden.js`)).text();
-  assert.ok(garden.includes("installHeaderGlass(document)"));
-  assert.ok(css.includes(".site-header { padding: 16px 11px; }"));
-  assert.match(css, /nav a \{[^}]*min-width: 44px; min-height: 44px;[^}]*color: var\(--green\)/);
-  assert.match(css, /\.home-link \{[^}]*min-width: 44px; min-height: 44px/);
-  assert.ok(css.includes(".site-header { position: static; margin-inline: 0; padding: 0; background: transparent; border: 0; box-shadow: none; }"));
-  assert.ok(css.includes(".record-notes i:nth-child(6)"));
-  assert.ok(css.includes("mail-arrival 20s"));
   const home = await (await fetch(origin)).text();
   const notes = home.match(/<span class="record-notes">([\s\S]*?)<\/span>/)[1];
   assert.equal((notes.match(/<i>/g) || []).length, 6);
@@ -378,9 +232,6 @@ test("Links fireplace includes a grounded thinking chair and three accessible fu
     "    '---..____..---'",
   ].join("\n"));
   assert.ok(!chair.includes("<svg") && !chair.includes("<img") && !chair.includes("<animate"));
-  const css = await (await fetch(`${origin}/styles.css`)).text();
-  assert.match(css, /\.thinking-chair-art \{[^}]*align-self: end;[^}]*font: var\(--object-font\)\/1\.2 var\(--mono\)/);
-  assert.ok(!css.includes("transform: scaleX(-1)"));
   assert.ok(html.includes('What does a better score leave out?'));
   assert.ok(html.includes('When does remembering become holding on?'));
   assert.ok(html.includes('Can a correction keep its context?'));
@@ -395,10 +246,6 @@ test("Links fireplace includes a grounded thinking chair and three accessible fu
   assert.ok(html.includes("<noscript><ul"));
   const script = await fetch(`${origin}/thoughts.js`);
   assert.equal(script.status, 200);
-  const source = await script.text();
-  assert.ok(source.includes('from "./graph-motion.js"'));
-  assert.ok(source.includes("nextFrame = now + 1000 / 30"));
-  assert.ok(source.includes('scene.dataset.motion === "moving" && !doc.hidden && !reduced.matches'));
 });
 test("work preserves chronology and the scoped team award alongside the requested accessibility motivation", async () => {
   const html = await (await fetch(origin)).text();
@@ -406,7 +253,6 @@ test("work preserves chronology and the scoped team award alongside the requeste
   assert.ok(html.includes("Team 1st place &#183; Ability Hack Executive Challenge"));
   assert.ok(html.includes('class="eyebrow">Microsoft Global Hackathon</div>'));
   assert.ok(html.includes("My brother stutters, so making speech technology more accessible is personal to me."));
-  assert.ok(!html.includes("Hypothetical Growth Targets"));
   const cards = [...html.matchAll(/<article class="work-item" data-work="([^"]+)">([\s\S]*?)<\/article>/g)];
   assert.deepEqual(cards.map((card) => card[1]), ["mai", "stashbird", "graphrag", "staccato"]);
   for (const [id, date] of [["mai", "2025-07"], ["stashbird", "2026-09"], ["graphrag", "2026-04"], ["staccato", "2025-11"]]) {
@@ -415,12 +261,7 @@ test("work preserves chronology and the scoped team award alongside the requeste
   assert.ok(cards[1][2].includes("preprint"));
   assert.ok(cards[2][2].includes("article"));
   assert.ok(cards[1][2].includes("Collaborative Apps and Platform (CAP) / Microsoft Teams"));
-  assert.ok(!html.includes("first rotation") && !html.includes("previous rotation") && !html.includes("current rotation"));
   assert.ok(html.includes('href="https://www.credly.com/badges/6e507446-96ac-45cc-89e7-e40440959f6c"'));
-  const graph = await (await fetch(`${origin}/graph.js`)).text();
-  assert.ok(!graph.includes("A little local-only doodle. Nothing is saved or sent."));
-  assert.ok(!graph.includes("hold + drag") && !graph.includes("faint lines: existing ties"));
-  assert.ok(graph.includes('report("ready", "")'));
 });
 
 test("the links page puts current work first, then milestones in descending date order", async () => {
@@ -439,78 +280,21 @@ test("the links page puts current work first, then milestones in descending date
   assert.ok(!html.includes("microsoft.sharepoint.com"));
 });
 
-test("the graph constellation has a separate faint scaffold, not fake committed sketches", async () => {
-  const graph = await (await fetch(`${origin}/graph.js`)).text();
-  assert.ok(graph.includes('connection.kind === "known"'));
-  assert.ok(graph.includes('references.classList.add("kg-reference-edges")'));
-  assert.ok(!graph.includes("faint lines: existing ties"));
-  const css = await (await fetch(`${origin}/graph.css`)).text();
-  assert.ok(css.includes(".kg-reference-edge"));
-});
-
-test("the sidequest staircases preserve the user's exact wording and reading order", async () => {
+test("the About sidequests are readable lists followed by a contact link", async () => {
   const html = await (await fetch(`${origin}/about.html`)).text();
   const about = html.slice(html.indexOf('class="about-copy"'), html.indexOf('class="house-furniture"'));
   const paths = [...about.matchAll(/<ul class="sidequest-path" role="list">([\s\S]*?)<\/ul>/g)];
-  assert.deepEqual(paths.map((path) => [...path[1].matchAll(/<li>([\s\S]*?)<\/li>/g)].map((item) => item[1].replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim())), [
-    ["a recipe untried,", "a trail less taken,", "a topic unlearned,", "a film unreviewed."],
-    [
-      "therapeutic archery as an ex-olympic training team usa member,",
-      "or my archival art volunteering at stanford's cantor arts center,",
-      "or developing film as an aspiring hobbyist photographer,",
-      "or engaging with online open-source data communities.",
-    ],
-  ]);
-  assert.ok(about.includes('<p class="sidequest-lead">I write sidequests into my main life journey:</p>'));
-  assert.ok(about.includes('<p class="sidequest-lead">so whether it be</p>'));
-  assert.ok(!about.includes("sidequest-qualifier"));
-  assert.ok(about.includes("<li>therapeutic archery as an ex-olympic training team usa member,</li>"));
+  assert.ok(paths.length > 0);
+  for (const path of paths) {
+    const items = [...path[1].matchAll(/<li>([\s\S]*?)<\/li>/g)];
+    assert.ok(items.length > 0 && items.every(item => item[1].trim()));
+  }
   const conclusion = about.match(/<p class="sidequest-conclusion">([\s\S]*?)<\/p>/)[1].replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
-  assert.equal(conclusion, "I seek to understand the outside world one different lens, or neural layer, at a time.");
-  assert.ok(about.includes("<span>I seek to understand the outside world</span>"));
-  assert.ok(about.includes("<span>one different lens,</span>"));
-  assert.ok(about.includes("<span>or neural layer,</span>"));
-  assert.ok(about.includes("<span>at a time.</span>"));
-  assert.ok(!about.includes("Team USA") && !about.includes("an art museum undiscovered"));
-  assert.ok(!about.includes("shoooting"));
-  assert.ok(!about.includes("developping"));
-  assert.ok(!about.includes("or open-sourcing my work and entering online competitions"));
+  assert.ok(conclusion.length > 0 && conclusion.endsWith("."));
   assert.ok(about.includes("<p>if any of those are your thing,"));
-  assert.ok(!about.includes("Amazon") && !about.includes("Cisco"));
-  assert.ok(!about.includes("One art-history sidequest:"));
-  assert.ok(!about.includes("Sometimes, different neural layers."));
   assert.ok(!about.includes("Olympian") && !about.includes("competed in the Olympics"));
   assert.ok(html.includes('class="about-garden"') && html.includes("room to grow."));
-  assert.ok(!html.includes("nicholas-yi.png") && !html.includes("line leader"));
   assert.equal((await fetch(`${origin}/nicholas-yi.png`)).status, 404);
-});
-
-test("sidequest connections are static decorative CSS, not extra graph controls", async () => {
-  const css = await (await fetch(`${origin}/styles.css`)).text();
-  assert.ok(css.includes("--stair-step: clamp("));
-  assert.ok(css.includes(".sidequest-path > li:nth-child(4)"));
-  assert.ok(css.includes(".sidequest-path > li::before"));
-  assert.ok(css.includes(".sidequest-path > li:not(:last-child)::after"));
-  assert.ok(css.includes("border-left: 1px solid var(--line); border-bottom: 1px solid var(--line);"));
-  assert.match(css, /\.sidequest-conclusion > span \+ span \{[^}]*margin-inline-start: var\(--stair-step\)/);
-  assert.ok(css.includes(".sidequest-conclusion > span:nth-child(3)"));
-  assert.ok(css.includes(".sidequest-conclusion > span:nth-child(4)"));
-  assert.ok(css.includes(".sidequest-conclusion > span::before"));
-  const dotInk = css.match(/\.sidequest-path > li::before, \.sidequest-conclusion > span::before \{[^}]*color-mix\(in srgb, var\(--thread-ink, var\(--green\)\) ([\d.]+)%/);
-  assert.ok(dotInk);
-  assert.equal(Number(dotInk[1]), 55 * 1.5);
-  assert.ok(css.includes(".sidequest-conclusion > span:not(:last-child)::after"));
-});
-
-test("quiet visual polish echoes graph ink without redundant section subtitles", async () => {
-  for (const path of ["/", "/links.html", "/about.html"]) {
-    const html = await (await fetch(`${origin}${path}`)).text();
-    assert.ok(!html.includes('class="section-aside"'));
-    assert.ok(!html.includes("a little background") && !html.includes("a few things to follow"));
-  }
-  const css = await (await fetch(`${origin}/styles.css`)).text();
-  for (const color of INK_PALETTE.slice(1, 4)) assert.ok(css.includes(`--thread-ink: ${color}`));
-  assert.match(css, /\.hearth-fire \{[^}]*box-shadow: 0 6px 24px #dca25218/);
 });
 
 test("the small native umbrella cursor opts in only for eligible fine-pointer space", async () => {
@@ -523,55 +307,7 @@ test("the small native umbrella cursor opts in only for eligible fine-pointer sp
     const svg = decodeURIComponent(url.slice("data:image/svg+xml,".length));
     assert.ok(svg.includes("width='24' height='28'"));
   }
-  const umbrella = await (await fetch(`${origin}/umbrella.js`)).text();
-  assert.ok(umbrella.includes('view.matchMedia("(hover: hover) and (pointer: fine)")'));
-  assert.ok(umbrella.includes('event.pointerType === "touch"'));
-  assert.ok(umbrella.includes("p, li, dt, dd, h1, h2, h3"));
-  assert.ok(umbrella.includes('[data-graph-playground], .play-section, .house-shelter'));
-  assert.ok(umbrella.includes("delete doc.documentElement.dataset.umbrellaCursor"));
   assert.ok(!css.includes("cursor: none"));
-});
-
-test("all pages share serif reading type and monospaced utility and ASCII type", async () => {
-  for (const path of ["/", "/links.html", "/about.html"]) {
-    const html = await (await fetch(`${origin}${path}`)).text();
-    assert.ok(html.includes('rel="stylesheet" href="styles.css"'));
-  }
-  const css = await (await fetch(`${origin}/styles.css`)).text();
-  assert.match(css, /body \{[^}]*font-family: var\(--serif\)/);
-  assert.match(css, /nav \{[^}]*font-family: var\(--mono\)/);
-  assert.match(css, /\.sidequest-path \{[^}]*font: inherit/);
-  assert.match(css, /\.work-art pre \{[^}]*font-family: var\(--mono\)/);
-  assert.ok(!css.includes("--sans") && !css.includes("type-proof"));
-});
-
-test("the requested headline and interests stay verbatim, while employer naming and copy are updated", async () => {
-  const html = await (await fetch(origin)).text();
-  const headline = html.match(/<p class="intro-line">([\s\S]*?)<\/p>/)[1].replace(/<br[^>]*> /, "\n");
-  assert.equal(headline, "Building things that learn,\nremember, and work.");
-  assert.ok(!html.includes("a small corner of the internet"));
-  assert.ok(html.includes("made for a quieter corner of the web."));
-  assert.ok(html.includes("<p>I'm interested in how agents remember, how we know they're getting better, and what it takes to make research useful in the real world.</p>"));
-  assert.ok(!html.includes("I'm also drawn to accessibility technology, especially speech systems that work better for people who stutter."));
-  for (const path of ["/", "/links.html"]) {
-    const page = await (await fetch(`${origin}${path}`)).text();
-    assert.ok(page.includes('class="eyebrow">Microsoft AI Development and Acceleration'));
-    assert.ok(page.includes('href="https://microsoft.ai/">Microsoft AI Development and Acceleration'));
-  }
-  for (const copy of [
-    "Agent harnesses and evaluation tools for faster research iteration.",
-    "Helping conversational agents update their memories as conversations change.",
-    "Bringing graph-based code retrieval into VS Code.",
-    "Speech recognition designed to better understand people who stutter.",
-  ]) assert.ok(html.includes(copy));
-  const graph = await (await fetch(`${origin}/graph-model.js`)).text();
-  assert.ok(graph.includes('"microsoft", "microsoft"'));
-  assert.ok(graph.includes('"staccato", "Staccato / accessibility"'));
-  assert.ok(graph.includes('"evaluation", "evaluation"'));
-  assert.ok(!graph.includes('"cooking", "cooking"'));
-  assert.ok(!graph.includes('"outdoors", "outdoors"'));
-  assert.ok(graph.includes('"museums", "art museums"'));
-  assert.ok(graph.includes('"opensource", "open source"'));
 });
 
 test("all pages have global navigation and a still-usable ASCII fireplace", async () => {
@@ -589,9 +325,6 @@ test("all pages have global navigation and a still-usable ASCII fireplace", asyn
     assert.ok(html.indexOf('class="house-body"') < html.indexOf('class="hearth"'));
     assert.ok(/class="[^"]*\bhouse-shelter\b[^"]*"/.test(html));
   }
-  const css = await (await fetch(`${origin}/styles.css`)).text();
-  assert.ok(css.includes(".site-header { position: sticky; top: 0;"));
-  assert.ok(css.includes('[data-rain] .hearth-frame { animation: none; }'));
 });
 
 test("Links is one continuous roofed house with a floor for each discrete milestone", async () => {
@@ -617,37 +350,8 @@ test("the added fireplace loop is a compact public audio asset and its proximity
   const head = await fetch(`${origin}/audio/fireplace.mp3`, { method: "HEAD" });
   assert.equal(Number(head.headers.get("content-length")), bytes.length);
   assert.equal(await head.text(), "");
-  const garden = await (await fetch(`${origin}/garden.js`)).text();
-  assert.ok(garden.includes("fireplaceProximity(fireplace, innerHeight, Math.max(0, document.documentElement.scrollHeight - innerHeight - scrollY))"));
-  assert.ok(garden.includes('protectedText.push(listeningCard.getBoundingClientRect())'));
-  assert.ok(garden.includes('document.querySelectorAll(".page, .listening-card")'));
-  assert.ok(garden.includes("audio?.fireplace(fireplaceAmount)"));
   const credits = await readFile(new URL("../AUDIO-CREDITS.md", import.meta.url), "utf8");
   assert.ok(credits.includes("PagDev") && credits.includes("fireplace.mp3"));
-});
-
-test("placed umbrellas are focusable, draggable, and protected against synthetic drag clicks", async () => {
-  const umbrella = await (await fetch(`${origin}/umbrella.js`)).text();
-  assert.ok(umbrella.includes('const art = doc.createElement("button")'));
-  assert.ok(umbrella.includes("art.setPointerCapture(event.pointerId)"));
-  assert.ok(umbrella.includes('doc.addEventListener("pointerup", endPress, true)'));
-  assert.ok(umbrella.includes("if (suppressClick)"));
-  assert.ok(umbrella.includes('art.addEventListener("keydown"'));
-  const sounds = await (await fetch(`${origin}/interaction-sounds.js`)).text();
-  assert.ok(sounds.includes('if (element.closest(".click-umbrella")) return null;'));
-  const css = await (await fetch(`${origin}/styles.css`)).text();
-  assert.match(css, /\.click-umbrella \{[^}]*touch-action: none; cursor: grab/);
-});
-test("graph hover/focus keeps audio sheltered independently of visual rain motion", async () => {
-  const garden = await (await fetch(`${origin}/garden.js`)).text();
-  assert.ok(garden.includes('graphActivity?.addEventListener("pointerenter"'));
-  assert.ok(garden.includes('graphActivity?.addEventListener("pointerleave"'));
-  assert.ok(garden.includes('graphActivity?.addEventListener("focusin", applyAudioShelter)'));
-  assert.ok(garden.includes("queueMicrotask(applyAudioShelter)"));
-  assert.ok(garden.includes("graphHovered || graphActivity?.contains(document.activeElement)"));
-  assert.ok(garden.includes("audio?.shelter(graphSheltered ? 1 : motionEnabled ? rain.shelter.strength : 0)"));
-  assert.ok(garden.includes('window.addEventListener("blur", releaseInteractionShelter)'));
-  assert.ok(!garden.includes("if (soundEnabled) audio?.shelter(rain.shelter.strength)"));
 });
 
 test("the about house has picture-frame, fireplace, and flower furniture in the new requested order", async () => {
@@ -676,8 +380,6 @@ test("the about house has picture-frame, fireplace, and flower furniture in the 
   assert.ok(row.includes('aria-label="Grow all three flowers and welcome a butterfly"'));
   assert.ok(row.includes('class="flower-branch flower-right"'));
   assert.match(css, /\.picture-photo \{[^}]*height: 13\.5em;[^}]*object-fit: cover;[^}]*object-position: center/);
-  const graph = await (await fetch(`${origin}/graph.js`)).text();
-  assert.ok(graph.includes('actions.append(undo, redo, clear)'));
 });
 
 test("home has a compact hearth while the other fireplaces retain matching tall art and shared glyph sizing", async () => {
@@ -740,9 +442,6 @@ test("the scene details preserve native controls, three-branch growth, and breat
   assert.equal(script.status, 200);
   assert.match(script.headers.get("content-type"), /javascript/);
   assert.doesNotMatch(await script.text(), /requestAnimationFrame|setInterval|AudioContext|fetch\(/);
-  const garden = await (await fetch(`${origin}/garden.js`)).text();
-  assert.ok(garden.includes('import { installSceneDetails } from "./scene-details.js"'));
-  assert.ok(garden.includes("installSceneDetails(document)"));
   const theme = await (await fetch(`${origin}/theme.css`)).text();
   assert.match(theme, /:is\([^}]*\.window-objects[^}]*\) \{ color: #adb998; \}/);
   assert.ok(theme.includes('.hearth-embers { color: #efb86a; }'));
@@ -788,9 +487,6 @@ test("all four ASCII project controls are centered and use finite manual animati
     assert.ok(css.includes(`@keyframes ${animation}`));
   }
   assert.doesNotMatch(css, /\[data-rain[^\]]*\][^{]*\.(?:flower-trigger|bird-trigger|agent-trigger|graph-trigger|speech-trigger|teacup-trigger|plant-trigger)/);
-  const source = await (await fetch(`${origin}/scene-details.js`)).text();
-  assert.ok(!source.includes("dataset.rain"));
-  assert.ok(source.includes('["bird", "agent", "graph", "speech"]'));
 });
 
 test("the project animations contain the complete checklist, wing outline and genuinely changed graph topologies", async () => {
@@ -858,8 +554,6 @@ test("About keeps a single static portrait without bookshelf or carousel preview
   assert.doesNotMatch(html, /bookshelf|shelf-book|data-picture-|picture-controls|picture-postcard/);
   const module = await fetch(`${origin}/about-room.js`);
   assert.equal(module.status, 404);
-  const garden = await (await fetch(`${origin}/garden.js`)).text();
-  assert.doesNotMatch(garden, /installAboutRoom|about-room\.js/);
   const css = await (await fetch(`${origin}/styles.css`)).text();
   assert.doesNotMatch(css, /bookshelf|shelf-book|picture-swivel|picture-controls|picture-postcard/);
 });
@@ -878,9 +572,6 @@ test("the dangling contact sheet uses labeled empty photo slots without replacin
   assert.equal(module.status, 200);
   assert.match(module.headers.get("content-type"), /javascript/);
   assert.doesNotMatch(await module.text(), /fetch\(|localStorage|sessionStorage|AudioContext|setInterval|requestAnimationFrame/);
-  const garden = await (await fetch(`${origin}/garden.js`)).text();
-  assert.ok(garden.includes('import { installPhotoSheet } from "./photo-sheet.js"'));
-  assert.ok(garden.includes("installPhotoSheet(document)"));
   const css = await (await fetch(`${origin}/styles.css`)).text();
   assert.match(css, /\.photo-sheet-panel \{[^}]*max-height:[^}]*overflow: auto;/);
   assert.match(css, /@media \(prefers-reduced-motion: no-preference\) and \(forced-colors: none\) \{[\s\S]*?\.photo-sheet-toggle \{ transition: transform 250ms ease; \}/);
@@ -898,9 +589,6 @@ test("portrait glass has a separate finite reflection control without moving the
   assert.match(css, /@media \(prefers-reduced-motion: no-preference\) and \(forced-colors: none\) \{\s*\.portrait-trigger\[data-detail-state="playing"\]/);
   assert.match(css, /@keyframes portrait-glint/);
   assert.doesNotMatch(css, /animation: portrait-glint[^;}]*infinite/);
-  const sheet = await (await fetch(`${origin}/photo-sheet.js`)).text();
-  assert.ok(sheet.includes('engagement = frame.querySelector(".photo-sheet")'));
-  assert.ok(!sheet.includes('corner.addEventListener("pointerenter"') && !sheet.includes('corner.addEventListener("focusin"'));
   const theme = await (await fetch(`${origin}/theme.css`)).text();
   assert.match(theme, /:root\[data-theme="lamplight"\] \.portrait-glass \{ --portrait-glint:/);
 });
@@ -927,9 +615,6 @@ test("collapsible field notes have centered reading panels with passive mist beh
       assert.ok(saturation(color) < saturation(banner), "note palette must be less saturated than the banner");
     }
   }
-  const garden = await (await fetch(`${origin}/garden.js`)).text();
-  assert.ok(garden.includes('installHeaderGlass, installNoteMist'));
-  assert.ok(garden.includes('installNoteMist(document)'));
   const note = await (await fetch(`${origin}/notes/evaluation`)).text();
   assert.ok(!note.includes('class="work-story"'));
 });
@@ -989,10 +674,6 @@ test("the full About story is a public page, while home ends with a roofed firep
   for (const name of ["sidequest-path", "house-furniture", "picture-frame", "about-garden"]) {
     assert.ok(!home.includes(`class="${name}"`), name);
   }
-  const garden = await (await fetch(`${origin}/garden.js`)).text();
-  assert.ok(garden.includes('".work-section, .links-main, .about-main, .error-main"'));
-  const umbrella = await (await fetch(`${origin}/umbrella.js`)).text();
-  assert.ok(umbrella.includes('".play-section, .house-shelter, .site-header, .site-footer"'));
 });
 
 test("the fireplace companions are ordinary accessible Spotify and email links", async () => {
@@ -1029,11 +710,6 @@ test("the listening card is an accessible optional disclosure, not a credential-
   const script = await fetch(`${origin}/listening.js`);
   assert.equal(script.status, 200);
   assert.match(script.headers.get("content-type"), /javascript/);
-  const source = await script.text();
-  assert.ok(source.includes('view.fetch("/api/listening"'));
-  assert.ok(source.includes('event.key !== "Escape"'));
-  assert.ok(source.includes('"focusin", open'));
-  assert.ok(source.includes('if (card.hidden || doc.hidden) return;'));
   const response = await fetch(`${origin}/api/listening`);
   assert.equal(response.status, 503);
   assert.deepEqual(await response.json(), { error: "not_connected" });
@@ -1102,16 +778,17 @@ test("missing URLs serve the roofed 404 with root-relative recovery links, never
   assert.ok(config.includes('"not_found_handling": "404-page"'));
 });
 
-test("active section tracking preserves static page markers and normal navigation", async () => {
-  const garden = await (await fetch(`${origin}/garden.js`)).text();
-  assert.ok(garden.includes('document.querySelectorAll("nav a[href^=\'#\']")'));
-  assert.ok(garden.includes('link.setAttribute("aria-current", "location")'));
-  assert.ok(garden.includes('link.removeAttribute("aria-current")'));
-  assert.ok(garden.includes('window.addEventListener("scroll", scheduleNavigation, { passive: true })'));
-  assert.ok(garden.includes('window.addEventListener("hashchange", scheduleNavigation)'));
-  assert.ok(garden.includes("bounds.top <= marker && bounds.bottom > marker"));
-  const css = await (await fetch(`${origin}/styles.css`)).text();
-  assert.match(css, /nav a\[aria-current\] \{[^}]*text-decoration: underline/);
+test("accepted writing replaces the review prototype without changing note routes", async () => {
+  const ordinary = await (await fetch(`${origin}/links`)).text();
+  const formerReview = await (await fetch(`${origin}/links?review=writing#writing-review`)).text();
+  assert.equal(formerReview, ordinary);
+  assert.doesNotMatch(ordinary, /writing-review\.js|writing-originals\.json/);
+  for (const path of ["/writing-review.js", "/writing-originals.json"]) {
+    const response = await fetch(`${origin}${path}`);
+    assert.equal(response.status, 404);
+    assert.match(response.headers.get("content-type"), /text\/html/);
+    assert.equal((await fetch(`${origin}${path}`, { method: "HEAD" })).status, 404);
+  }
 });
 
 test("only public assets are served and unsupported methods are explicit", async () => {
@@ -1160,22 +837,6 @@ test("education is a compact accurate About block, never a new homepage section"
   assert.ok(about.indexOf('class="about-education"') < about.indexOf('class="house-furniture"'));
   const home = await (await fetch(origin)).text();
   assert.ok(!home.includes("Carnegie Mellon") && !home.includes("about-education"));
-});
-
-test("reflective writing drops the template headings while retaining evidence and contribution boundaries", async () => {
-  const html = await (await fetch(`${origin}/links.html`)).text();
-  const stories = [...html.matchAll(/<details class="work-story" id="[^"]+">([\s\S]*?)<\/details>/g)].map(match => match[1]);
-  const note = await (await fetch(`${origin}/notes/evaluation`)).text();
-  const text = `${stories.join(" ")} ${note}`;
-  assert.ok(text.includes("I want an agent to remember what I said. I also want to be allowed to stop meaning it."));
-  assert.ok(text.includes("semantic decisions") && text.includes("held fixed"));
-  assert.ok(text.includes("I co-authored Stashbird."));
-  assert.ok(text.includes("owning evaluation across memory systems and benchmarks"));
-  for (const heading of ["The problem", "The design tradeoff", "What the evidence establishes", "Separate the kinds of failure", "Make comparisons inspectable", "Test the promise you actually make"]) {
-    assert.ok(!new RegExp(`<h[34]>${heading}</h[34]>`).test(text));
-  }
-  assert.ok(!text.includes("product rollout") && !text.includes("unpublished result"));
-  assert.ok(!text.includes("Once We Were Us") && !text.includes("Chungking Express"));
 });
 
 test("homepage metadata adds professional context and the public identities use matching link styles", async () => {

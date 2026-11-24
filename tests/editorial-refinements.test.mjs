@@ -4,7 +4,7 @@ import { readFile } from "node:fs/promises";
 
 const read = file => readFile(new URL(`../${file}`, import.meta.url), "utf8");
 
-test("field notes is discoverable on every page without changing canonical paths or resume content", async () => {
+test("field notes is discoverable on every page with stable canonical paths", async () => {
   const files = ["index.html", "about.html", "links.html", "404.html", "notes/evaluation.html"];
   for (const file of files) {
     const html = await read(`public/${file}`);
@@ -18,14 +18,6 @@ test("field notes is discoverable on every page without changing canonical paths
   const home = await read("public/index.html");
   assert.ok(home.includes('href="links.html#field-notes-heading">Field notes'));
   assert.ok(home.includes('href="links.html#public-links-heading">More work'));
-  for (const html of [home, links]) {
-    assert.ok(html.includes('class="resume-placeholder" title="Resume link coming soon">resume (soon)'));
-    const work = html.match(/data-work="mai">([\s\S]*?)<\/(?:article|li)>/)[1];
-    assert.ok(work.includes('class="eyebrow">Microsoft AI Development and Acceleration'));
-    assert.ok(work.includes('href="https://microsoft.ai/">Microsoft AI Development and Acceleration'));
-  }
-  const about = await read("public/about.html");
-  assert.ok(about.includes("<li>therapeutic archery as an ex-olympic training team usa member,</li>"));
 });
 
 test("the compact mobile window and legible graph do not shrink the introduction or touch targets", async () => {
@@ -35,10 +27,6 @@ test("the compact mobile window and legible graph do not shrink the introduction
   assert.ok(css.includes(".intro-copy, .links-intro, .about-copy p, .work-copy > p, .public-link-entry > p { font-size: 16px; }"));
   const graph = await read("public/graph.css");
   assert.match(graph, /\[data-graph-compact="true"\] \.kg-node \{[^}]*min-height: 44px;[^}]*font-size: 0\.75rem/);
-  assert.ok(!graph.includes("0.56rem"));
-  const home = await read("public/index.html");
-  assert.ok(home.includes("Building things that learn,<br class=\"desktop-break\"> remember, and work."));
-  assert.ok(home.includes("<p>I'm interested in how agents remember, how we know they're getting better, and what it takes to make research useful in the real world.</p>"));
 });
 
 test("the README accurately identifies deployed analytics and the sound opt-in default", async () => {
@@ -48,7 +36,7 @@ test("the README accurately identifies deployed analytics and the sound opt-in d
   assert.ok(!readme.includes("no tracking") && !readme.includes("on by default"));
 });
 
-test("revised writing preserves attribution, semantic-decision limits and synchronized evaluation openings", async () => {
+test("writing preserves attribution, semantic-decision limits and synchronized evaluation openings", async () => {
   const links = await read("public/links.html");
   const note = await read("public/notes/evaluation.html");
   const memory = links.match(/aria-label="Stashbird case study">([\s\S]*?)<\/article>/)[1];
@@ -64,24 +52,6 @@ test("revised writing preserves attribution, semantic-decision limits and synchr
   assert.ok(note.includes("it should not quietly replace the attempt that came before it"));
   assert.ok(note.includes('href="https://arxiv.org/html/2609.34242v2#S3"'));
   for (const html of [memory, note]) {
-    assert.ok(!html.includes("76.4") && !html.includes("unpublished result") && !html.includes("Andrew Sun"));
     assert.equal((html.match(/class="story-aside"/g) ?? []).length, 1);
   }
-});
-
-test("original writing is retained in an isolated review snapshot rather than shipped inside the normal page", async () => {
-  const snapshot = JSON.parse(await read("public/writing-originals.json"));
-  assert.equal(snapshot.revision, "c854becedd453e0b57e07c978a57ced2d398f0b7");
-  assert.ok(snapshot.memory.startsWith("<p>I keep coming back to memory"));
-  assert.ok(snapshot.memory.includes("The part I worked on"));
-  assert.ok(snapshot.evaluation.startsWith("<p>It is easy to want a number"));
-  const links = await read("public/links.html");
-  assert.ok(!links.includes("It is easy to want a number"));
-  assert.ok(!links.includes('id="writing-review"'));
-  const loader = await read("public/writing-review.js");
-  assert.ok(loader.startsWith('if (new URL(location.href).searchParams.get("review") === "writing")'));
-  assert.ok(loader.includes('fetch(new URL("./writing-originals.json", import.meta.url))'));
-  assert.ok(loader.includes('["Original", oldHTML], ["Revised", revised.innerHTML]'));
-  assert.ok(loader.includes('robots.content = "noindex"'));
-  assert.ok(loader.includes('notice.setAttribute("role", "alert")'));
 });

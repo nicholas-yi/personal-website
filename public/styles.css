@@ -110,8 +110,8 @@ h3 { font-family: var(--serif); font-weight: 400; font-size: 25px; letter-spacin
 h3 a { text-decoration: none; }
 h3 a:hover { text-decoration: underline; }
 .external-arrow { display: inline-block; font-family: var(--mono); font-size: 15px; color: #7d896b; vertical-align: 2px; }
-.external-arrow, .social-links a span, .say-hello span { display: inline-block; transition: transform 180ms ease; }
-h3 a:is(:hover, :focus-visible) .external-arrow, .social-links a:is(:hover, :focus-visible) span, .say-hello:is(:hover, :focus-visible) span { transform: translate(2px, -2px); }
+.external-arrow, .social-links a span { display: inline-block; transition: transform 180ms ease; }
+h3 a:is(:hover, :focus-visible) .external-arrow, .social-links a:is(:hover, :focus-visible) span { transform: translate(2px, -2px); }
 .work-art { transition: color 200ms ease, border-color 200ms ease; }
 .work-item:is(:hover, :focus-within) .work-art { color: #52623e; border-color: #b6c0a7; }
 .work-copy > p { font-size: 13px; color: #5d6457; line-height: 1.8; }
@@ -192,19 +192,6 @@ h3 a:is(:hover, :focus-visible) .external-arrow, .social-links a:is(:hover, :foc
   .note-mist { display: none; }
   .work-story { background: Canvas; border-color: CanvasText; }
 }
-.writing-review { margin: 32px 0 40px; padding-top: 24px; border-top: 1px dashed var(--green); scroll-margin-top: 110px; }
-.writing-review > p { margin: 14px 0; color: var(--muted); font: 14px/1.7 var(--serif); }
-.writing-review > a { display: inline-block; min-height: 44px; font: 12px/1.7 var(--mono); padding-block: 8px; }
-.writing-comparison { margin-top: 24px; }
-.writing-comparison > summary { min-height: 44px; cursor: pointer; color: var(--green); font: 21px/1.5 var(--serif); padding-block: 10px; }
-.writing-versions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-top: 12px; }
-.writing-version { min-width: 0; border-top: 1px solid var(--line); padding-top: 14px; }
-.writing-version > h3 { margin: 0; color: var(--green); font: 12px/1.7 var(--mono); letter-spacing: .04em; }
-.writing-version .story-copy { margin-top: 16px; max-width: none; }
-.writing-version pre { white-space: pre-wrap; overflow-wrap: anywhere; }
-.writing-review .review-provenance { margin-top: 24px; font: 11px/1.7 var(--mono); }
-.review-error { margin-top: 18px; color: var(--ink); font: 14px/1.7 var(--serif); }
-@media (max-width: 800px) { .writing-versions { grid-template-columns: minmax(0, 1fr); } }
 .copy-tools { min-width: 0; }
 .copy-action { min-height: 44px; padding: 8px; border: 0; background: transparent; color: var(--green); font: 11px/1.5 var(--mono); text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
 .copy-action:is(:disabled, [aria-disabled="true"]) { cursor: progress; }
@@ -377,7 +364,6 @@ h3 a:is(:hover, :focus-visible) .external-arrow, .social-links a:is(:hover, :foc
 .sidequest-path > li::before, .sidequest-conclusion > span::before { content: ""; position: absolute; z-index: 1; left: -2px; top: calc(0.9em - 2px); width: 5px; height: 5px; border: 1px solid color-mix(in srgb, var(--thread-ink, var(--green)) 82.5%, var(--paper)); border-radius: 50%; background: var(--paper); pointer-events: none; }
 .sidequest-path > li:not(:last-child)::after, .sidequest-conclusion > span:not(:last-child)::after { content: ""; position: absolute; left: 0; top: 0.9em; bottom: calc(-0.9em - var(--stair-gap)); width: var(--stair-step); border-left: 1px solid var(--line); border-bottom: 1px solid var(--line); border-bottom-left-radius: 6px; pointer-events: none; }
 .sidequest-path > li:last-child, .sidequest-conclusion > span:last-child { margin-bottom: 0; }
-.say-hello { display: inline-block; margin-top: 21px; font-family: var(--mono); font-size: 10px; color: var(--green); }
 .about-garden { align-self: center; text-align: center; color: #879275; }
 .about-garden pre { display: inline-block; text-align: left; font: 11px/1.4 var(--mono); }
 .about-garden > span { display: block; font: italic 13px/1.6 var(--serif); margin-top: 12px; }
@@ -571,11 +557,11 @@ h3 a:is(:hover, :focus-visible) .external-arrow, .social-links a:is(:hover, :foc
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .external-arrow, .social-links a span, .say-hello span, .work-art { transition: none; }
+  .external-arrow, .social-links a span, .work-art { transition: none; }
   [data-rain] .hearth-frame { animation: none; }
   .hearth-companions .record-spindle, .hearth-companions .record-notes i, .hearth-companions .record-sleeve, .hearth-companions .winged-mail, .hearth-companions .winged-mail i { animation: none !important; }
   .thought-wisp, .perching-mail, .perching-mail i { animation: none !important; }
-  h3 a:is(:hover, :focus-visible) .external-arrow, .social-links a:is(:hover, :focus-visible) span, .say-hello:is(:hover, :focus-visible) span { transform: none; }
+  h3 a:is(:hover, :focus-visible) .external-arrow, .social-links a:is(:hover, :focus-visible) span { transform: none; }
 }
 @media print {
   #garden, .header-glass, .garden-controls, .garden-status, .garden-note, .skip-link, .rain-window, .click-umbrella, .hearth, .house-roof, .picture-frame, .page-puddles, .copy-tools { display: none !important; }
