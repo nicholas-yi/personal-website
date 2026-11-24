@@ -1183,6 +1183,13 @@ test("homepage metadata adds professional context and the public identities use 
   assert.ok(home.includes("<title>Nicholas Yi &mdash; Software Engineer at Microsoft AI</title>"));
   assert.ok(home.includes('property="og:title" content="Nicholas Yi &mdash; Software Engineer at Microsoft AI"'));
   assert.ok(home.includes('Building things that learn,<br class="desktop-break"> remember, and work.'));
+  for (const copy of [
+    home.match(/<meta name="description" content="([^"]+)"/)[1],
+    home.match(/<div class="intro-copy">([\s\S]*?)<\/div>/)[1],
+  ]) {
+    assert.ok(copy.includes("working on agents, evaluation, and research infrastructure."));
+    assert.ok(!copy.includes("post-training"));
+  }
   assert.ok(home.includes("I'm interested in how agents remember, how we know they're getting better, and what it takes to make research useful in the real world."));
   for (const path of ["/", "/links"]) {
     const html = await (await fetch(`${origin}${path}`)).text();
